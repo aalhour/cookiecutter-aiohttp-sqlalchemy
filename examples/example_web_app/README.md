@@ -2,14 +2,14 @@
 
 An example web app generated with this cookiecutter. Hosts three HTTP GET APIs and Swagger UI documentation in addition to having a working SQLAlchemy model for accessing a database table.
 
-## API Routes:
+## API Routes
 
  * `localhost:9999/api/-/aliveness`: Dummy Aliveness endpoint
  * `localhost:9999/api/examples`: Get All Examples
  * `localhost:9999/api/examples/1`: Get Example by ID
  * `localhost:9999/api/v1.0/docs`: SwaggerUI-Powered API Documentation
  
-## Setup:
+## Setup
 
 First step, setup the virtual environment and install the requirements 
 ```
@@ -43,3 +43,9 @@ Fourth step, run the application server:
 ```
 $ venv/bin/run_example_web_app
 ```
+
+## Screenshots
+
+Swagger UI Documentation of the Examples API Endpoints:
+
+![Swagger UI](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/blob/master/examples/example_web_app_swagger.png "Swagger UI")
