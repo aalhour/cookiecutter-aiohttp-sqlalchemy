@@ -9,7 +9,7 @@ Cookiecutter template for boilerplate async Web Apps powered by Aiohttp and SQLA
   * [Code Snippet](#code-snippet)
   * [Working Examples](#working-examples)
 
-## Features:
+## Features
 
  * SQLAlchemy Declarative Data Models with async/await class methods
  * Run custom SQLAlchemy declarative queries asynchronously inside Aiohttp's awaitable request handlers
@@ -22,7 +22,7 @@ Cookiecutter template for boilerplate async Web Apps powered by Aiohttp and SQLA
  * Configuration is offloaded to a flat text file (not the best option, I know! :/)
  * Swagger-UI integration
 
-## Usage:
+## Usage
 
 First, grab cookiecutter if you don't have it and start the generation process:
 ```
@@ -57,7 +57,7 @@ Fourth and last step, start the application using the Pythonic entry point:
 $ venv/bin/run_<your-app-name>
 ```
 
-## Code Snippet:
+## Code Snippet
 
 The following is an example API code that tries to query the database using an SQLAlchemy Declarative Model:
 
@@ -73,6 +73,6 @@ class UsersApi:
             return self.json_response(user.serialized)
 ```
 
-## Working Examples:
+## Working Examples
 
 If you want to see working examples of this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples).
