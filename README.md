@@ -12,7 +12,9 @@ Cookiecutter template for boilerplate async Web Apps powered by Aiohttp and SQLA
 ## Features
 
  * SQLAlchemy Declarative Data Models with async/await class methods
- * Run custom SQLAlchemy declarative queries asynchronously inside Aiohttp's awaitable request handlers
+ * Perform custom SQLAlchemy declarative queries *async* inside Aiohttp's awaitable request handlers
+   + Asynchronicity is emulated using an executor in the background
+   + You can use a simple utility function out-of-the box which manages all the details for you
  * Database Sessions are scoped for every request
    + The request context is emulated using asyncio's Task interface, inspired by this [blog post by by SkyScanner](https://medium.com/@SkyscannerEng/from-flask-to-aiohttp-22f1ddc5dd5e)
  * Manage transactional database sessions using the context manager interface with your data models
