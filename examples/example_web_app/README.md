@@ -24,7 +24,7 @@ $ cp config/example.conf ~/.config/config/example_web_app.conf
 
 Make sure to setup the database host, name, user and port in the config file or the example won't work
 ```
-$ cat ~/.config/config/example_web_app.conf
+$ cat ~/.config/example_web_app.conf
 
 [db]
 host = localhost
