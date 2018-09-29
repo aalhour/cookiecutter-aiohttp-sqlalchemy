@@ -1,0 +1,25 @@
+#################################################################################################
+#                                                                                               #
+# High-level project requirements in floating mode (i.e. w/o dependencies and versions).        #
+#                                                                                               #
+# Only used to track the high-level dependencies of Butler in addition to be used to track      #
+#   upgrades to such pip dependencies.                                                          #
+#                                                                                               #
+# DO NOT use this file to resolve dependencies when installing the project. Please refer to     #
+#   `setup.py` or `make install` to know more about the installation process.                   #
+#                                                                                               #
+#################################################################################################
+aiohttp
+aiohttp-swagger     # swagger
+aiotask_context
+async_timeout       # aiohttp dep
+attrs			    # aiohttp dep
+chardet			    # aiohttp dep
+multidict		    # aiohttp dep
+psycopg2-binary
+raven               # sentry
+raven-aiohttp       # sentry
+SQLAlchemy
+ujson
+uvloop
+yarl			    # aiohttp dep

@@ -1,0 +1,109 @@
+swagger: "2.0"
+
+info:
+  description: "API documentation for the Example Web App project."
+  version: "1.0"
+  title: "Example Web App"
+  contact:
+    email: "support@example.com"
+produces:
+  - "application/json"
+consumes:
+  - "application/json"
+basePath: "/example_web_app/api/v1.0"
+
+
+###################################################################
+#                                                                 #
+#  SECURITY                                                       #
+#                                                                 #
+#  List all of your authentication patterns below!                #
+#                                                                 #
+###################################################################
+securityDefinitions:
+  BasicAuth:
+    type: "basic"
+
+security:
+  - BasicAuth: []
+
+
+###################################################################
+#                                                                 #
+#  DEFINITIONS                                                    #
+#                                                                 #
+#  List all of your data models and collections below!            #
+#                                                                 #
+###################################################################
+definitions:
+  Example:
+    type: "object"
+    required:
+      - "id"
+      - "name"
+    properties:
+      id:
+        type: "integer"
+        example: 1
+      name:
+        type: "string"
+        example: "best example ever!"
+      created_at:
+        type: "string"
+        format: "datetime"
+        example: "2018-09-15T15:53:00"
+        description: "Non-nullable ISO 8601 datetime, with or without microseconds"
+      updated_at:
+        type: "string"
+        format: "datetime"
+        x-nullable: True
+        example: "2018-10-01T12:37:12"
+        description: "Nullable ISO 8601 datetime, with or without microseconds"
+
+
+###################################################################
+#                                                                 #
+#  PATHS                                                          #
+#                                                                 #
+#  List all of your APIs and HTTP operations below!               #
+#                                                                 #
+###################################################################
+paths:
+  /examples:
+    get:
+      tags:
+        - "Examples"
+      summary: "Return all Examples"
+      description: "Return all Examples from the Database"
+      operationId: "getAllExamples"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "An array of examples"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Example"
+
+  /examples/{id}:
+    get:
+      tags:
+      - "Examples"
+      summary: "Return a single Example"
+      description: "Return a single Example, given its ID"
+      operationId: "getExampleById"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Example ID"
+        required: true
+        type: "integer"
+      responses:
+        "200":
+          description: "Example"
+          schema:
+            $ref: "#/definitions/Example"
+

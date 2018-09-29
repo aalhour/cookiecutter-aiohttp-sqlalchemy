@@ -1,0 +1,12 @@
+asynctest<1
+aiohttp-debugtoolbar<1
+aiohttp-devtools<1
+attrs<18
+bravado<10
+prance<0.10
+coverage<5
+hypothesis<4
+py<2
+pyflakes<2
+pytest<4
+pytest-aiohttp<1
