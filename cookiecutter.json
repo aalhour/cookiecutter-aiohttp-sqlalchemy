@@ -1,0 +1,10 @@
+{
+    "author_name": "Ahmad Alhour",
+    "author_email": "me@aalhour.com",
+    "project_email": "support@example.com",
+    "project_website": "example.com/api/v1.0",
+    "github_username": "aalhour",
+    "project_name": "Example Web App",
+    "app_name": "example_web_app",
+    "project_short_description": "AN Example Web API project powered by Aiohttp and SQLAlchemy"
+}
