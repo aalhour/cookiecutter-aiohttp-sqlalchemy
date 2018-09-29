@@ -220,7 +220,7 @@ cover coverage:
 	@echo "####################################################"
 	@test -d $(TEST_VENV_DIR) || { echo "Please run 'make install-dev' first!"; exit 1; }
 	@. $(TEST_VENV_DIR)/bin/activate \
-		&& coverage run --source butler/ `which py.test` --cache-clear -$(VERBOSITY) tests/unit_tests; \
+		&& coverage run --source {{cookiecutter.app_name}}/ `which py.test` --cache-clear -$(VERBOSITY) tests/unit_tests; \
 		coverage report; \
 		coverage html;
 	@echo "coverage report done! To see it run something like 'chromium-browser htmlcov/index.html'"

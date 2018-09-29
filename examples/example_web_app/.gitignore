@@ -62,7 +62,7 @@ target/
 # venv
 venv
 .testing-venv
-.butler-venv
+.{{cookiecutter.app_name}}-venv
 *venv*
 
 # PyCharm's .idea directory

@@ -2,7 +2,7 @@
 #                                                                                               #
 # High-level project requirements in floating mode (i.e. w/o dependencies and versions).        #
 #                                                                                               #
-# Only used to track the high-level dependencies of Butler in addition to be used to track      #
+# Only used to track the high-level dependencies of {{cookiecutter.app_name}} in addition to be used to track      #
 #   upgrades to such pip dependencies.                                                          #
 #                                                                                               #
 # DO NOT use this file to resolve dependencies when installing the project. Please refer to     #
