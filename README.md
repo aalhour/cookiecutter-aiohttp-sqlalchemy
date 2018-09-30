@@ -1,6 +1,6 @@
 # cookiecutter-aiohttp-sqlalchemy
 
-Cookiecutter template for boilerplate async Web Apps powered by Aiohttp and SQLAlchemy.
+Fat cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger
 
 ## Contents
  
