@@ -20,7 +20,7 @@ Fat cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlc
  * Manage transactional database sessions using the context manager interface with your data models
  * Packaging included - `setup.py` and `Makefile` already implemented for you
    + Type in `make help` to get more info about the CLI features
- * Nicely separated interfaces for the Application factory and the URL routes registeration
+ * Nicely separated interfaces for the Application factory and the URL routes registration
  * Configuration is offloaded to a flat text file (not the best option, I know! :/)
  * Swagger-UI integration
 
