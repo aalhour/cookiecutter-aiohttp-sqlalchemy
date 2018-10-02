@@ -5,7 +5,7 @@ import pytest
 import aiotask_context as context
 from aiohttp.test_utils import TestClient, TestServer, unused_port
 
-from {{cookiecutter.app_name}}.app import create_app
+from {{cookiecutter.app_name}} import app as app_factory
 
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -25,7 +25,7 @@ def set_task_factory(loop):
 
 @pytest.fixture(autouse=True)
 async def server(aiohttp_server) -> TestServer:
-    app = create_app()
+    app = app_factory.create_app()
     server = await aiohttp_server(app, port=TEST_PORT)
     return server
 

@@ -19,7 +19,7 @@ $ make install
 
 Second step, copy the config file template over to `~/.config/example_web_app.conf` and customize it:
 ```
-$ cp config/example.conf ~/.config/config/example_web_app.conf
+$ cp config/example.conf ~/.config/example_web_app.conf
 ```
 
 Make sure to setup the database host, name, user and port in the config file or the example won't work

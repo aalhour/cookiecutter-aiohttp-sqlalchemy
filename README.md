@@ -12,8 +12,8 @@ Fat cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlc
 ## Features
 
  * SQLAlchemy Declarative Data Models with async/await class methods
- * Perform custom SQLAlchemy declarative queries *async* inside Aiohttp's awaitable request handlers
-   + Asynchronicity is emulated using an executor in the background
+ * Run SQLAlchemy declarative queries *asynchronously* inside Aiohttp's awaitable request handlers
+   + Asynchronicity is emulated using an ThreadPoolExecutor in the background, managed by the I/O Loop
    + You can use a simple utility function out-of-the box which manages all the details for you
  * Database Sessions are scoped for every request
    + The request context is emulated using asyncio's Task interface, inspired by this [blog post by by SkyScanner](https://medium.com/@SkyscannerEng/from-flask-to-aiohttp-22f1ddc5dd5e)
@@ -21,8 +21,14 @@ Fat cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlc
  * Packaging included - `setup.py` and `Makefile` already implemented for you
    + Type in `make help` to get more info about the CLI features
  * Nicely separated interfaces for the Application factory and the URL routes registration
- * Configuration is offloaded to a flat text file (not the best option, I know! :/)
  * Swagger-UI integration
+ * Configuration is offloaded to a flat text file (not the best option, I know! :/)
+ * Simple to use CLI made with make. Type in `make help` to display all available commands
+ * Two separated Python virtualenvs for 1) hosting the application requirements, and 2) running tests
+   + Easily managed via the CLI interface, so no need for you to remember this detail
+   + Comes in handy when running tests post-deployment on the same machine without affecting the app virtualenv
+   + `make install` command: creates the app virtualenv and resolves its dependencies
+   + `make install-dev`: creates the testing virtualenv and resolves its dev-dependencies, i.e.: pytest ... etc
 
 ## Usage
 
@@ -39,7 +45,7 @@ $ make install
 
 Third, copy the config file template over to `~/.config/<your-app-name>.conf`. It is important that the file name matches the application name you entered in the cookiecutter generation process:
 ```
-$ cp config/example.conf ~/.config/config/example_web_app.conf
+$ cp config/example.conf ~/.config/<your-app-name>.conf
 ```
 
 Next thing is, you need to customize your config file and enter your database details under the `[db]` section, please follow the config file:
