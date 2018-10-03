@@ -1,14 +1,16 @@
 # cookiecutter-aiohttp-sqlalchemy
 
-Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger
+Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger.
+
+Check out the [features](#features) section below for a short description of what this box packs for you.
 
 ## Contents
  
   * [Features](#features)
+  * [Requirements](#requirements)
   * [Usage](#usage)
-  * [Code Snippet](#code-snippet)
-  * [Working Examples](#working-examples)
-
+  * [Examples](#examples)
+ 
 ## Features
 
  * SQLAlchemy Declarative Data Models with async/await class methods
@@ -29,6 +31,16 @@ Fat and opinionated cookiecutter template for building async Web Apps powered by
    + Comes in handy when running tests post-deployment on the same machine without affecting the app virtualenv
    + `make install` command: creates the app virtualenv and resolves its dependencies
    + `make install-dev`: creates the testing virtualenv and resolves its dev-dependencies, i.e.: pytest ... etc
+
+## Requirements
+
+ * Python 3.6+ (tested with Python 3.6.6)
+ * Aiohttp
+ * Aiohttp-Swagger
+ * Psycopg2
+ * SQLAlchemy
+ * UVLoop
+ * uJSON
 
 ## Usage
 
@@ -65,7 +77,7 @@ Fourth and last step, start the application using the Pythonic entry point:
 $ venv/bin/run_<your-app-name>
 ```
 
-## Code Snippet
+## Examples
 
 The following is an example API code that tries to query the database using an SQLAlchemy Declarative Model:
 
@@ -81,6 +93,4 @@ class UsersApi:
             return self.json_response(user.serialized)
 ```
 
-## Working Examples
-
-If you want to see working examples of this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples).
+If you want to see a **working example web app** generated using this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples) directory.
