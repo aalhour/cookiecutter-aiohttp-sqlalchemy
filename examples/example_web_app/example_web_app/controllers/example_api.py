@@ -39,5 +39,5 @@ class ExampleApiController(BaseJsonApiController):
             if example is None:
                 return self.write_error(404, "The requested example doesn't exist!")
 
-            return self.json_response(example.serialized)
+            return self.json_response(body=example.serialized)
 

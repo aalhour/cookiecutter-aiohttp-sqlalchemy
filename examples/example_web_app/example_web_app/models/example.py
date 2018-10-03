@@ -29,11 +29,12 @@ class Example(db.BaseModel):
     created_at = Column(TIMESTAMP(timezone=False), nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(TIMESTAMP(timezone=False), nullable=True, onupdate=datetime.datetime.utcnow)
 
-    def __init__(self, name):
+    def __init__(self, id_=None, name=None):
         """
         New model instance initializer
         :param name: the name of the example
         """
+        self.id = id_
         self.name = name
 
     @classmethod

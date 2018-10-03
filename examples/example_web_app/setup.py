@@ -27,7 +27,7 @@ test_requirements = [line.strip() for line in open(os.path.join(REQUIREMENTS_FOL
 setup(
     name='example_web_app',
     version='{version}'.format(version=__version__),
-    description="AN Example Web API project powered by Aiohttp and SQLAlchemy",
+    description="An Example Web API project powered by Aiohttp and SQLAlchemy",
     long_description=get_long_description(),
     author="Ahmad Alhour",
     author_email='me@aalhour.com',
