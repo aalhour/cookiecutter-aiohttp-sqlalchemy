@@ -1,6 +1,6 @@
 aiohttp==3.4.4
 aiohttp-swagger==1.0.5
-aiotask-context==0.5.0
+aiotask-context==0.6.0
 alembic==1.0.0
 async-timeout==3.0.0
 attrs==18.2.0
