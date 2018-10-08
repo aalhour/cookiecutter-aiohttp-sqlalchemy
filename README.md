@@ -62,7 +62,7 @@ $ cp config/example.conf ~/.config/<your-app-name>.conf
 
 Next thing is, you need to customize your config file and enter your database details under the `[db]` section, please follow the config file:
 ```
-$ cat ~/.config/example_web_app.conf
+$ cat ~/.config/<your-app-name>.conf
 
 [db]
 host = localhost
