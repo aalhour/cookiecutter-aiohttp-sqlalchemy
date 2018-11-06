@@ -34,7 +34,7 @@ Check out the [features](#features) section below for a short description of wha
 
 ## Requirements
 
- * Python 3.6+ (tested with Python 3.6.6)
+ * Python 3.6+ (tested with Python 3.7.0)
  * Aiohttp
  * Aiohttp-Swagger
  * Psycopg2
