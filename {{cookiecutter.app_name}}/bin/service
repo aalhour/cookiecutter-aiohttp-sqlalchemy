@@ -1,0 +1,267 @@
+#!/bin/bash
+
+#########################################################################
+#                                                                       #
+#           CHANGE THE CONTENTS OF THE FOLLOWING VARIABLES              #
+#                                                                       #
+RELOAD=""                                                               #
+PORT=9999                                                               #
+STOP_TIMEOUT=30                                                         #
+START_TIMEOUT=10                                                        #
+#                                                                       #
+#########################################################################
+
+# The directory where the script is located
+SCRIPT_DIR=`cd $(dirname $0) && pwd`
+
+DAEMON="{{cookiecutter.project_name}}"
+
+# The app directory
+BASE_DIR=$SCRIPT_DIR/..
+
+# The pid file contains the id of the running process
+PID_FILE="$SCRIPT_DIR/{{cookiecutter.app_name}}.pid"
+
+# Logs directory
+LOGS_DIR=$BASE_DIR/logs
+
+# The current log file
+LOG_FILE="$LOGS_DIR/{{cookiecutter.app_name}}.log"
+
+# virtual environment's directory
+VENV_DIR=$BASE_DIR/venv
+
+
+# Before doing anything, make sure the virtualenv is activated
+if [ ! -z $VIRTUAL_ENV ]; then
+    printf "[INFO] Continue with your own virtualenv ($VIRTUAL_ENV) activated!\n"
+else
+ 	if [ -d "$VENV_DIR" ]
+ 	then
+ 		source $VENV_DIR/bin/activate || { echo "[ERROR] failed to activate default virtualenv \"($VENV_DIR)\"."; exit 255; }
+ 		echo "[INFO] continue with default virtualenv ($VENV_DIR) activated!"
+ 	else
+ 		echo "[ERROR] default virtualenv ($VENV_DIR) does not exist! Please run \"make install\"."
+ 		exit 255
+    fi
+fi
+
+
+usage()
+{
+cat << EOF
+Usage: $0 {start|stop|restart|status}
+
+Options:
+        start - Starts the $DAEMON daemon. Exit code:
+                0 - process successfully started
+                1 - process was already running or the startup failed
+                2 - the process started, but it's not listening on the specified port
+
+        stop - Stops the running daemon, if any. Exit code:
+                0 - the process shutdown gracefully
+                1 - SIGKILL was used because the process didn't shutdown in time
+                2 - an error occurred and the process didn't stop even after SIGKILL
+
+        restart - stop and then start. Exit code: whatever "start" returned
+
+        status - Prints the current status of the daemon. Exit code:
+                0 - running
+                1 - stopped
+                2 - the process is running, but not listening on the specified port
+EOF
+}
+
+# Check if the daemon is running
+#
+# Return code:
+#       0 - running
+#       1 - stopped
+#       2 - the process is running, but not listening on the specified port
+d_status()
+{
+     # First look for the PID file
+        if [ ! -r $PID_FILE ] ; then
+                printf "$DAEMON is stopped\n"
+                return 1
+        fi
+
+        # ... then check if there still is a process with this PID
+        local pid=`cat $PID_FILE`
+
+        if ! kill -0 $pid &> /dev/null ; then
+                echo "PID file found. No process running with PID $pid"
+                printf "\n$DAEMON is stopped\n"
+
+                return 1
+        fi
+
+        # The 'timeout' command is GNU and therefore not available on Mac
+        local timeout=
+        if command -v timeout &> /dev/null ; then
+                timeout="timeout -k 1 1"
+        fi
+
+    # Finally try to connect
+        if ! $timeout bash -c "echo > /dev/tcp/0.0.0.0/$PORT 2> /dev/null" ; then
+                printf "\nERROR\t$DAEMON running with PID $pid, but could not connect to it on port $PORT\n"
+                return 2
+        fi
+
+        printf "$DAEMON running with PID $pid on port $PORT\n"
+
+        return 0
+}
+
+# Wait for the given command to return 0 for a given amount of time
+#
+# Params:
+#       command
+#       timeout
+#       command_description - optional
+#
+# Return code: the output of <command>
+wait_for_command()
+{
+        local cmd=$1
+        local timeout=$2
+        local desc=$3
+
+        printf "$desc "
+
+        # Execute $cmd every second until it returns 0 or the timeout expires
+        local seconds=1
+        while eval "! $cmd" && [ "$seconds" -le "$timeout" ] ; do
+                sleep 1
+                printf "."
+
+                seconds=`expr $seconds + 1`
+        done
+
+        printf "\n"
+
+        # Return the exit code of <command>
+        eval "$cmd"
+}
+
+# Starts the daemon.
+#
+# Return code:
+#       0 - process successfully started
+#       1 - process was already running or the startup failed
+#       2 - the process started, but it's not listening on the specified port
+d_start()
+{
+
+    # Check for any existing process first
+    d_status &> /dev/null
+    status_code=$?
+
+    if [ $status_code -ne 1 ] ; then
+            echo "$DAEMON is already running. Abort start procedure!"
+            return 1
+    fi
+
+    printf "Starting $DAEMON...\n\n"
+
+    mkdir -p $LOGS_DIR
+
+    # Start daemon from $BASE_DIR
+        (
+                cd $BASE_DIR
+
+                /usr/bin/env run_{{cookiecutter.app_name}} >> $LOG_FILE 2>&1 &
+
+                echo $! > $PID_FILE
+        )
+        pid=`cat $PID_FILE`
+
+    # Wait for the daemon to start
+        wait_for_command "d_status &> /dev/null" $START_TIMEOUT "Waiting for $DAEMON to start"
+        status_code=$?
+
+        echo
+
+        if [ $status_code -eq 0 ] ; then
+                printf "$DAEMON started with PID $pid on port $PORT\nPID file: $PID_FILE\nLog file: $LOG_FILE\n"
+        elif [ $status_code -eq 2 ] ; then
+                printf "ERROR\t$DAEMON process started with PID $pid, but not listening on port $PORT\nPID file: $PID_FILE\nLog file: $LOG_FILE\n"
+        else
+                printf "ERROR\t$DAEMON didn't start successfully after $START_TIMEOUT seconds\nLog file: $LOG_FILE\n"
+        fi
+
+        return $status_code
+}
+# Stops the daemon.
+#
+# Return code:
+#       0 - the process shutdown gracefully
+#       1 - SIGKILL was used because the process didn't shutdown in time
+#       2 - an error occurred and the process didn't stop even after SIGKILL
+d_stop()
+{
+    # First check the PID file
+        if [ ! -r $PID_FILE ] ; then
+                echo "No pid file found. Nothing to stop!"
+
+                return 0
+        fi
+
+        printf "Stopping $DAEMON...\n\n"
+
+        # ... then send SIGTERM
+        local pid=`cat $PID_FILE`
+
+        echo "Sending SIGTERM to pid $pid"
+        kill -s TERM $pid
+
+        # Wait for STOP_TIMEOUT seconds for the process to finish
+        if wait_for_command "! kill -0 $pid &> /dev/null" $STOP_TIMEOUT "Waiting for $DAEMON to shutdown" ; then
+                # Gracefull shutdown
+                rm -f $PID_FILE
+                printf "\n$DAEMON stopped\n"
+
+                return 0
+        fi
+
+    # The process didn't shutdown. Send SIGKILL
+        printf "\n$DAEMON didn't shutdown gracefully. Sending SIGKILL.\n"
+
+        kill -9 $pid
+
+        # In some situations not even SIGKILL can stop the process
+        if wait_for_command "! kill -0 $pid &> /dev/null" $STOP_TIMEOUT "Waiting for $DAEMON to shutdown" ; then
+                # Process stopped after SIGKILL
+                rm -f $PID_FILE
+                printf "\n$DAEMON stopped with SIGKILL\n"
+
+                return 1
+        fi
+
+        printf "\nERROR\t$DAEMON didn't stop even after SIGKILL\n"
+
+        return 2
+}
+
+case "$1" in
+        start)
+                d_start
+                ;;
+        stop)
+                d_stop
+                ;;
+        restart)
+                d_stop
+
+                echo
+                sleep 1
+
+                d_start
+                ;;
+        status)
+                d_status
+                ;;
+        *)
+                usage
+                ;;
+esac
