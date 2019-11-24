@@ -39,7 +39,7 @@ Check out the [features](#features) section below for a short description of wha
  - [ ] Configuration Management:
    - [x] Ini-filed based configuration, see: `config/default.conf`
    - [ ] Support configuration via `.env` file
-  - [x] Management CLI:
+ - [x] Management CLI:
    - [x] `make install` to create a virtualenv and install the project
    - [x] `make test` to run the tests
    - [x] `make clean` to remove cached and built artifacts
