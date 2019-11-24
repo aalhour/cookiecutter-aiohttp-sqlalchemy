@@ -1,51 +1,140 @@
 # example_web_app
 
-An example web app generated with this cookiecutter. Hosts three HTTP GET APIs and Swagger UI documentation in addition to having a working SQLAlchemy model for accessing a database table.
+An Example Web API project powered by Aiohttp and SQLAlchemy
 
-## API Routes
 
- * `localhost:9999/api/-/aliveness`: Dummy Aliveness endpoint
- * `localhost:9999/api/examples`: Get All Examples
- * `localhost:9999/api/examples/1`: Get Example by ID
- * `localhost:9999/api/v1.0/docs`: SwaggerUI-Powered API Documentation
- 
-## Setup
+## Contents
 
-First step, setup the virtual environment and install the requirements 
-```
-$ cd /path/to/this/example
-$ make install
-```
+  * [Synopsis](#synopsis)
+  * [Dependencies](#dependencies)
+    + [Critical Backends](#critical-backends)
+    + [System Requirements](#system-requirements)
+  * [Features](#features)
+  * [Components](#components)
+  * [API](#api)
+  * [How To Guides](#how-to-guides)
+    + [Setup](#setup)
+      * [Setup on Host](#setup-on-host)
+    + [Build](#build)
+      * [Build on Host](#build-on-host)
+      * [Build on Docker](#build-on-docker)
+    + [Run](#run)
+      * [Dev Server](#dev-server)
+      * [Standalone](#standalone)
+      * [Docker](#docker-container)
+    + [Test](#test)
+    + [Package](#package)
+  * [Additional Resources](#additional-resources)
 
-Second step, copy the config file template over to `~/.config/example_web_app.conf` and customize it:
-```
-$ cp config/example.conf ~/.config/example_web_app.conf
-```
 
-Make sure to setup the database host, name, user and port in the config file or the example won't work
-```
-$ cat ~/.config/example_web_app.conf
+## Synopsis
 
-[db]
-host = localhost
-port = 5432
-name = <database_name>
-schema = <schema_name>
-user = <database_user>
 ```
-
-Third step, initialize the example's database table:
-```
-$ venv/bin/init_example
+bin/service {start|stop|status|restart}
 ```
 
-Fourth step, run the application server:
+
+## Dependencies
+
+### Critical Backends
+
+  * _[TODO: Add services, data stores and critical backends]_
+
+### System Requirements
+
+ * Please refer to the `requirements.txt` file and the `setup.py` script for a complete, up-to date, list of application requirements
+ * The `requirements_dev.txt` file specified dependencies necessary for running the tests. See testing instructions below
+
+
+## Features
+
+  * _[TODO: Add list of user-facing features]_
+
+
+## API
+
+ * Swagger UI: [`http://0.0.0.0:9999/api/v1.0/docs`](http://0.0.0.0:9999/api/v1.0/docs)
+ * OpenAPI Schema Definition: `example_web_app/docs/swagger-v1.0.yaml` 
+
+
+## How To Guides
+
+### Setup
+
+#### Setup on Host
+
+Configure the app:
+
+```bash
+cp config/default.conf ~/.config/example_web_app.conf
 ```
-$ venv/bin/run_example_web_app
+
+Install the app:
+
+```bash
+$ make clean install
 ```
 
-## Screenshots
+Make sure you have the database user/passwords in your `~/.pgpass` file.
 
-Swagger UI Documentation of the Examples API Endpoints:
+### Build
 
-![Swagger UI](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/blob/master/examples/example_web_app_swagger.png "Swagger UI")
+#### Build on Host
+
+```bash
+$ make clean install
+```
+
+#### Build on Docker
+
+```bash
+$ make docker-build
+```
+
+### Run
+
+#### Dev Server
+
+Development server is strictly for development purposes only. It comes with neat support for file-watching and automatic hot-reload.
+
+```bash
+$ make dev-server
+```
+
+#### Standalone
+
+To run the application as a standalone service in the background (SysV style), run the following command. All logs are redirected to the `logs/example_web_app.log` file.
+
+```bash
+$ bin/service start
+```
+
+#### Docker Container
+
+```bash
+$ make docker-run
+```
+
+The above command assumes the docker image has been built, to make sure you have built it already, please run the following command:
+
+```bash
+$ make docker-build
+```
+
+### Test
+
+```
+$ make test
+```
+
+### Package
+
+```
+$ make package
+```
+
+The result of the command is a wheel binary under the `dist/` local directory.
+
+## Additional Resources
+
+  * _[TODO: Add any relevant additional resources to the project]_
