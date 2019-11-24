@@ -81,3 +81,6 @@ bin/*.pid
 ignore
 
 .commit_hash
+
+# Docker DB Volume
+docker-db-volume/

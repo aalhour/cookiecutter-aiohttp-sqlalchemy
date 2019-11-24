@@ -42,7 +42,7 @@ RUN cp config/default.conf ~/.config/{{cookiecutter.app_name}}.conf
 # Format:
 #   hostname:port:database:username:password
 RUN touch ~/.pgpass
-RUN echo $DB_HOST:$DB_PORT:$DB_NAME:$DB_USER:$DB_PASSWORD >> ~/.pgpass
+RUN echo "$DB_HOST:$DB_PORT:$DB_NAME:$DB_USER:$DB_PASSWORD" >> ~/.pgpass
 RUN chmod 600 ~/.pgpass
 
 # Setup environment and run application
