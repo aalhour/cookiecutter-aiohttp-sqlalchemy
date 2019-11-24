@@ -2,7 +2,7 @@
 
 Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger.
 
-Check out the [Features](#features) section below for a short description of what this box packs for you. The [Examples](#examples) section showcases a code example of an async API using an SQLAlchemy Base Model. 
+Check out the [Features](#features) section below for a short description of what this box packs for you. The [Code Examples](#code-examples) section showcases a code example of an async API using an SQLAlchemy Base Model. 
 
 ## Contents
  
