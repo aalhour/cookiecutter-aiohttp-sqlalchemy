@@ -2,7 +2,9 @@
 
 Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger.
 
-Check out the [Features](#features) section below for a short description of what this box packs for you. The [Code Examples](#code-examples) section showcases a code example of an async API using an SQLAlchemy Base Model. 
+Check out the [Features](#features) section below for a short description of what this box packs for you. The [Code Examples](#code-examples) section showcases a code example of an async API using an SQLAlchemy Base Model.
+
+If you want to see a **working example web app** generated using this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples) directory.
 
 ## Contents
  
