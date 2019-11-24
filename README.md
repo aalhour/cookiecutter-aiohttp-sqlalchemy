@@ -67,9 +67,9 @@ $ pip install cookiecutter
 $ cookiecutter https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy
 ```
 
-Either run everything with Docker and Docker-compose, as follows:
+Either run everything with Docker and Docker-compose, which will also spin-up a PostgreSQL side-car instance, as follows:
 ```
-docker-compose up
+$ docker-compose up
 ```
 
 Or, go the manual way and install everything locally via the Makefile:
