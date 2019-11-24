@@ -4,14 +4,18 @@ services:
     postgres:
         restart: always
         image: postgres:latest
-        container_name: postgres
-        # environment:
-        #     POSTGRES_PASSWORD: password
-        env_file: .env
+        container_name: {{cookiecutter.db_host}}
+        environment:
+            POSTGRES_PASSWORD: password
+            POSTGRES_USER: {{cookiecutter.db_user}}
+            POSTGRES_DB: {{cookiecutter.db_name}}
+            POSTGRES_INITDB_ARGS: --data-checksums --auth-local trust
+            PGDATA: /var/lib/postgresql/data/pgdata
+#        env_file: .env
         ports:
             - "5432:5432"
         volumes:
-            - /var/lib/postgresql/data:/var/lib/postgresql/data
+            - "docker-db-volume:/var/lib/postgresql/data"
         networks:
           - aiohttp
 
@@ -21,11 +25,14 @@ services:
             context: .
         ports:
             - "{{cookiecutter.server_port}}:{{cookiecutter.server_port}}"
-        env_file: .env
+#        env_file: .env
         environment:
-            AIOHTTP_DB_HOST: postgres
-            AIOHTTP_DB_DATABASE: postgres
-            # AIOHTTP_DB_PASSWORD: password
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_NAME: postgres
+            DB_USER: postgres
+            DB_SCHEMA: public
+            DB_PASSWORD: password
         depends_on:
             - postgres
         links:
@@ -34,7 +41,7 @@ services:
             - aiohttp
 
 volumes:
-    /var/lib/postgresql/data:
+    docker-db-volume:
         driver: local
 
 networks:

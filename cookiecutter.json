@@ -10,8 +10,8 @@
     "server_port": "9999",
     "db_host": "postgres",
     "db_port": "5432",
-    "db_user": "postgres",
-    "db_name": "postgres",
+    "db_user": "admin",
+    "db_name": "example_db",
     "db_schema": "public",
     "project_short_description": "An Example Web API project powered by Aiohttp and SQLAlchemy"
 }

@@ -3,13 +3,14 @@ FROM python:3.8-alpine
 MAINTAINER {{cookiecutter.author_email}}
 
 # Arguments
-ARG server_host="{{cookiecutter.server_host}}"
-ARG server_port={{cookiecutter.server_port}}
-ARG db_host="{{cookiecutter.db_host}}"
-ARG db_port={{cookiecutter.db_port}}
-ARG db_user="{{cookiecutter.db_user}}"
-ARG db_name="{{cookiecutter.db_name}}"
-ARG db_schema="{{cookiecutter.db_schema}}"
+ARG SERVER_HOST="{{cookiecutter.server_host}}"
+ARG SERVER_PORT={{cookiecutter.server_port}}
+ARG DB_HOST="{{cookiecutter.db_host}}"
+ARG DB_PORT={{cookiecutter.db_port}}
+ARG DB_USER="{{cookiecutter.db_user}}"
+ARG DB_NAME="{{cookiecutter.db_name}}"
+ARG DB_SCHEMA="{{cookiecutter.db_schema}}"
+ARG DB_PASSWORD=password
 
 # Set the LANG ENV VAR
 ENV LANG C.UTF-8
@@ -37,13 +38,20 @@ RUN python setup.py install
 RUN mkdir -p ~/.config/
 RUN cp config/default.conf ~/.config/{{cookiecutter.app_name}}.conf
 
+# Configure the postgresql secrets file
+# Format:
+#   hostname:port:database:username:password
+RUN touch ~/.pgpass
+RUN echo $DB_HOST:$DB_PORT:$DB_NAME:$DB_USER:$DB_PASSWORD >> ~/.pgpass
+RUN chmod 600 ~/.pgpass
+
 # Setup environment and run application
-ENV SERVER_HOST $server_host
-ENV SERVER_PORT $server_port
-ENV DB_HOST $db_host
-ENV DB_PORT $db_port
-ENV DB_NAME $db_name
-ENV DB_USER $db_user
+ENV SERVER_HOST $SERVER_HOST
+ENV SERVER_PORT $SERVER_PORT
+ENV DB_HOST $DB_HOST
+ENV DB_PORT $DB_PORT
+ENV DB_NAME $DB_NAME
+ENV DB_USER $DB_USER
 
 EXPOSE $SERVER_PORT
 
