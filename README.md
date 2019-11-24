@@ -2,14 +2,14 @@
 
 Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger.
 
-Check out the [features](#features) section below for a short description of what this box packs for you.
+Check out the [Features](#features) section below for a short description of what this box packs for you. The [Examples](#examples) section showcases a code example of an async API using an SQLAlchemy Base Model. 
 
 ## Contents
  
   * [Features](#features)
   * [Requirements](#requirements)
-  * [Usage](#usage)
-  * [Examples](#examples)
+  * [Quick Start](#quick-start)
+  * [Code Examples](#code-examples)
  
 ## Features
 
@@ -61,7 +61,7 @@ Check out the [features](#features) section below for a short description of wha
  * UVLoop
  * uJSON
 
-## Usage
+## Quick Start
 
 First, grab cookiecutter if you don't have it and start the generation process:
 ```
@@ -101,13 +101,16 @@ Lastly, start the application using the Pythonic entry point:
 $ venv/bin/run_<your-app-name>
 ```
 
-## Examples
+## Code Examples
 
 The following is an example API code that tries to query the database using an SQLAlchemy Declarative Model:
 
 ```python
 class UsersApi:
     async def get_user_by_id(self, request):
+        """
+        GET /api/v1.0/users/<id>
+        """
         user_id = request.match_info.get('id')
         
         async with transactional_session() as db:
@@ -116,5 +119,32 @@ class UsersApi:
             
             return self.json_response(user.serialized)
 ```
+
+```python
+class User(db.BaseModel):
+    """
+    Data model for the User database table.
+    """
+    __tablename__ = 'user'
+
+    id = Column(INTEGER, primary_key=True, autoincrement=True)
+
+    def __init__(self, id_=None, name=None):
+        self.id = id_
+
+    @classmethod
+    async def get_by_id(cls, id_: int, session: Session) -> "User":
+        """
+        Get user by ID from the database
+        
+        :param id_: User ID
+        :param session: Database session object
+        :return: User instance if user exists; otherwise, None
+        """
+        # Run the SQLAlchemy session.query(Example).get() function in the background
+        return await run_async(session.query(cls).get, (id_,))
+```
+
+The template comes with pre-packaged asyncio utility functions and classes to aid querying the database via SQLALchemy declarative models in the background, the above mentioned `transactional_session` context-manager, `run_async` function and `db.BaseModel` class will be generated for you as part of the cookiecutter template. 
 
 If you want to see a **working example web app** generated using this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples) directory.
