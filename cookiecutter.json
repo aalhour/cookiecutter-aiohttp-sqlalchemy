@@ -6,5 +6,12 @@
     "github_username": "aalhour",
     "project_name": "Example Web App",
     "app_name": "example_web_app",
+    "server_host": "0.0.0.0",
+    "server_port": "9999",
+    "db_host": "postgres",
+    "db_port": "5432",
+    "db_user": "postgres",
+    "db_name": "postgres",
+    "db_schema": "public",
     "project_short_description": "An Example Web API project powered by Aiohttp and SQLAlchemy"
 }

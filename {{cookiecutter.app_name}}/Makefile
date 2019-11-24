@@ -31,8 +31,8 @@ help:
 	@echo "  clean              [alias] for running \"clean-venv\" and \"clean-temp-files\" sequentially."
 	@echo "  clean-venv         to clean the virtualenv directories and links."
 	@echo "  clean-temp-files   to cleanup the project from temporary files."
-	@echo "  venv               to create the virtualenv and its symbolic links."
-	@echo "  test-venv          to create the virtualenv for installing dev requirements and running tests."
+	@echo "  venv-app           to create the applications virtualenv and its symbolic links."
+	@echo "  venv-test         to create the testing virtualenv for hosting dev requirements and running tests."
 	@echo "  install            to install the app, runs \"venv\" automatically."
 	@echo "  install-dev        to install the app in editable mode, runs \"venv\" automatically."
 	@echo "  package            to create a package ready for deployment."
@@ -97,7 +97,7 @@ log-py-version:
 	@$(PYTHON) -c 'import sys; v = sys.version_info; print(f"{v.major}.{v.minor}.{v.micro}-{v.releaselevel}");'
 
 
-venv:
+venv-app:
 	@echo "####################################################"
 	@echo "# CREATING THE VIRTUAL ENVIRONMENT                 #"
 	@echo "####################################################"
@@ -109,7 +109,7 @@ venv:
 	@echo "Done!"
 
 
-test-venv:
+venv-test:
 	@echo "####################################################"
 	@echo "# CREATING THE >>> TEST <<< VIRTUAL ENVIRONMENT    #"
 	@echo "####################################################"
@@ -125,7 +125,7 @@ test-venv:
 # INSTALLATION                  #
 #                               #
 #################################
-install: venv
+install: venv-app
 	@echo "####################################################"
 	@echo "# ACTIVATING VENV & RESOLVING DEPENDENCIES         #"
 	@echo "####################################################"
@@ -135,7 +135,7 @@ install: venv
 	@echo "Done!"
 
 
-install-dev: test-venv
+install-dev: venv-test
 	@echo "####################################################"
 	@echo "# CREATING TESTING VENV AND INSTALLING DEV DEPS    #"
 	@echo "####################################################"
@@ -233,3 +233,16 @@ lint flake8:
 	@test -d $(TEST_VENV_DIR) || { echo "Please run 'make install-dev' first!"; exit 1; }
 	@. $(TEST_VENV_DIR)/bin/activate && flake8 ty/
 
+
+#################################
+#                               #
+# DOCKERIZATION                 #
+#                               #
+#################################
+docker-build:
+	@docker build -t {{cookiecutter.app_name}}:latest .
+
+docker-run:
+	@docker run --rm -it -p {{cookiecutter.server_port}}:{{cookiecutter.server_port}} {{cookiecutter.app_name}}
+
+docker-build-run: docker-build docker-run
