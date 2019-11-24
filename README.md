@@ -25,11 +25,6 @@ Check out the [features](#features) section below for a short description of wha
    - [x] Swagger JSON Schema served at: `/api/v1.0/docs/swagger.json`
  - [x] Development Server:
    - [x] `make dev-server` starts an Aiohttp Dev Server (file-watch enabled)
- - [x] Management CLI:
-   - [x] `make install` to create a virtualenv and install the project
-   - [x] `make test` to run the tests
-   - [x] `make clean` to remove cached and built artifacts
-   - [x] `make help` to display more awesome commands
  - [x] Docker Support:
    - [x] `Dockerfile`: configurable arguments for DB Access
    - [x] `docker-compose.yml`: Spins up `PostgreSQL` for development
@@ -44,8 +39,15 @@ Check out the [features](#features) section below for a short description of wha
  - [ ] Configuration Management:
    - [x] Ini-filed based configuration, see: `config/default.conf`
    - [ ] Support configuration via `.env` file
+  - [x] Management CLI:
+   - [x] `make install` to create a virtualenv and install the project
+   - [x] `make test` to run the tests
+   - [x] `make clean` to remove cached and built artifacts
+   - [x] `make help` to display more awesome commands
+   - [x] `make dev-upgrade-deps` upgrades all high-level dependencies
  - [x] Python packaging:
-   - [x] `setup.py`
+   - [x] Auto-generated `setup.py` with project info
+   - [x] `make package` builds a distributable `wheel` of the project
 
 ## Requirements
 
@@ -65,12 +67,17 @@ $ pip install cookiecutter
 $ cookiecutter https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy
 ```
 
-Second, setup virtual environment and install requirements:
+Either run everything with Docker and Docker-compose, as follows:
+```
+docker-compose up
+```
+
+Or, go the manual way and install everything locally via the Makefile:
 ```
 $ make install
 ```
 
-Third, copy the config file template over to `~/.config/<your-app-name>.conf`. It is important that the file name matches the application name you entered in the cookiecutter generation process:
+Once installed manually, copy the config file template over to `~/.config/<your-app-name>.conf`. It is important that the file name matches the application name you entered in the cookiecutter generation process:
 ```
 $ cp config/example.conf ~/.config/<your-app-name>.conf
 ```
@@ -87,7 +94,7 @@ schema = <schema_name>
 user = <database_user>
 ```
 
-Fourth and last step, start the application using the Pythonic entry point:
+Lastly, start the application using the Pythonic entry point:
 ```
 $ venv/bin/run_<your-app-name>
 ```
