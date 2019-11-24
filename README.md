@@ -48,6 +48,8 @@ Check out the [features](#features) section below for a short description of wha
  - [x] Python packaging:
    - [x] Auto-generated `setup.py` with project info
    - [x] `make package` builds a distributable `wheel` of the project
+ - [ ] Docs:
+   - [x] README.md (see: [example](examples/example_web_app/README.md))
 
 ## Requirements
 
