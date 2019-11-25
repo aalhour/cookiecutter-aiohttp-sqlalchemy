@@ -6,14 +6,9 @@ from tests.fixtures.database import TransactionalSessionFixture
 from tests.fixtures.models.example import ExampleFixture
 
 
-#########################################################
-#                                                       #
-#               UNIT TEST CASES                         #
-#                                                       #
-#########################################################
 class TestHttpGetAllUnitTestCase:
-    @asynctest.patch('{{cookiecutter.app_name}}.models.example.Example.get_all')
-    @asynctest.patch('{{cookiecutter.app_name}}.controllers.example_api.transactional_session')
+    @asynctest.patch('example_web_app.models.example.Example.get_all')
+    @asynctest.patch('example_web_app.controllers.example_api.transactional_session')
     async def test_returns_data_from_model_successfully(self, session, get_all_examples, client):
         ###
         # Arrange
@@ -33,8 +28,8 @@ class TestHttpGetAllUnitTestCase:
         assert len(json_response) == 3
         get_all_examples.assert_called_once_with(session_mock)
 
-    @asynctest.patch('{{cookiecutter.app_name}}.models.example.Example.get_all')
-    @asynctest.patch('{{cookiecutter.app_name}}.controllers.example_api.transactional_session')
+    @asynctest.patch('example_web_app.models.example.Example.get_all')
+    @asynctest.patch('example_web_app.controllers.example_api.transactional_session')
     async def test_returns_empty_list_when_model_is_empty(self, session, get_all_examples, client):
         ###
         # Arrange
@@ -56,8 +51,8 @@ class TestHttpGetAllUnitTestCase:
 
 
 class TestHttpGetByIdUnitTestCase:
-    @asynctest.patch('{{cookiecutter.app_name}}.models.example.Example.get_by_id')
-    @asynctest.patch('{{cookiecutter.app_name}}.controllers.example_api.transactional_session')
+    @asynctest.patch('example_web_app.models.example.Example.get_by_id')
+    @asynctest.patch('example_web_app.controllers.example_api.transactional_session')
     async def test_success(self, session, get_by_id, client):
         ###
         # Arrange
@@ -77,8 +72,8 @@ class TestHttpGetByIdUnitTestCase:
         assert isinstance(json_response, dict)
         get_by_id.assert_called_once_with(example_id, session_mock)
 
-    @asynctest.patch('{{cookiecutter.app_name}}.models.example.Example.get_by_id')
-    @asynctest.patch('{{cookiecutter.app_name}}.controllers.example_api.transactional_session')
+    @asynctest.patch('example_web_app.models.example.Example.get_by_id')
+    @asynctest.patch('example_web_app.controllers.example_api.transactional_session')
     async def test_returns_404_if_resource_not_found(self, session, get_by_id, client):
         ###
         # Arrange

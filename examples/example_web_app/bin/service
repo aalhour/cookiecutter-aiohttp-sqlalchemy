@@ -5,7 +5,7 @@
 #           CHANGE THE CONTENTS OF THE FOLLOWING VARIABLES              #
 #                                                                       #
 RELOAD=""                                                               #
-PORT=8137                                                               #
+PORT=9999                                                               #
 STOP_TIMEOUT=30                                                         #
 START_TIMEOUT=10                                                        #
 #                                                                       #

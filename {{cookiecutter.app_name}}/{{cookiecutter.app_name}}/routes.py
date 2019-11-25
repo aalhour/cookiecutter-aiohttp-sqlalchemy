@@ -4,7 +4,7 @@ Routes module.
 Responsible for providing the means to register the application routes.
 """
 
-from {{cookiecutter.app_name}}.controllers.aliveness_api import AlivenessApiController
+from {{cookiecutter.app_name}}.controllers.health_api import HealthApiController
 from {{cookiecutter.app_name}}.controllers.example_api import ExampleApiController
 
 
@@ -13,7 +13,7 @@ def setup_routes(app):
     # Register the HelloWorld API handlers
     #
 
-    aliveness_api = AlivenessApiController()
+    health_api = HealthApiController()
     example_api = ExampleApiController()
 
     ###
@@ -29,5 +29,5 @@ def setup_routes(app):
     #
     # Add your internal/administrative API routes here
     #
-    app.router.add_get('/api/-/aliveness', aliveness_api.get)
+    app.router.add_get('/api/-/health', health_api.get)
 

@@ -10,7 +10,6 @@
     + [Critical Backends](#critical-backends)
     + [System Requirements](#system-requirements)
   * [Features](#features)
-  * [Components](#components)
   * [API](#api)
   * [How To Guides](#how-to-guides)
     + [Setup](#setup)

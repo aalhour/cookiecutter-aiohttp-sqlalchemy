@@ -32,7 +32,7 @@ help:
 	@echo "  clean-venv         to clean the virtualenv directories and links."
 	@echo "  clean-temp-files   to cleanup the project from temporary files."
 	@echo "  venv-app           to create the applications virtualenv and its symbolic links."
-	@echo "  venv-test         to create the testing virtualenv for hosting dev requirements and running tests."
+	@echo "  venv-test          to create the testing virtualenv for hosting dev requirements and running tests."
 	@echo "  install            to install the app, runs \"venv\" automatically."
 	@echo "  install-dev        to install the app in editable mode, runs \"venv\" automatically."
 	@echo "  package            to create a package ready for deployment."
