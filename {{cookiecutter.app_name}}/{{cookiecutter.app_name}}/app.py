@@ -100,6 +100,12 @@ def create_app() -> web.Application:
     :return: web.Application instance
     """
     ###
+    # Set the context for the I/O Loop
+    #
+    loop = asyncio.get_event_loop()
+    loop.set_task_factory(context.task_factory)
+
+    ###
     # Create an app instance and do the following:
     #   1. Initialize its config.
     #   2. Prepare its on-startup, on-cleanup and on-shutdown signals.
@@ -110,6 +116,7 @@ def create_app() -> web.Application:
             sentry_middleware_factory(),
             request_context_middleware,
         ],
+        loop=loop,
     )
     _app['config'] = get_config()
 
@@ -136,12 +143,6 @@ def run_app():
     """
     Application runner function.
     """
-    ###
-    # Set the context for the I/O Loop
-    #
-    loop = asyncio.get_event_loop()
-    loop.set_task_factory(context.task_factory)
-
     ###
     # Create the application and read the host and port addresses
     #
