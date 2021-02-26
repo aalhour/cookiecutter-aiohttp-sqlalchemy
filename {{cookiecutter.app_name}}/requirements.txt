@@ -1,4 +1,4 @@
-aiohttp==3.6.2
+aiohttp==3.7.4
 aiohttp-swagger==1.0.14
 aiotask-context==0.6.1
 alembic==1.0.0
