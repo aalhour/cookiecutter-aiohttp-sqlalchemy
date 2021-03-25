@@ -14,7 +14,7 @@ multidict==4.7.6
 psycopg2-binary==2.8.5
 python-dateutil==2.7.3
 python-editor==1.0.3
-PyYAML==5.1.2
+PyYAML==5.4
 raven==6.10.0
 raven-aiohttp==0.7.0
 six==1.11.0
