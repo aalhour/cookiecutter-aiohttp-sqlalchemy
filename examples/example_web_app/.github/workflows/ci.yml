@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check example_web_app/ tests/
+
+      - name: Check formatting with ruff
+        run: ruff format --check example_web_app/ tests/
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements_dev.txt
+          pip install -e .
+
+      - name: Type check with mypy
+        run: mypy example_web_app/
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: test
+      DB_PASSWORD: test
+      DB_NAME: test_db
+      DB_SCHEMA: public
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 9999
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements_dev.txt
+          pip install -e .
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t example_web_app:test .
+
+      - name: Start services with Docker Compose
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          sleep 15
+          docker compose ps
+
+      - name: Test health endpoint
+        run: |
+          curl --fail http://localhost:9999/api/-/health
+
+      - name: View logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v

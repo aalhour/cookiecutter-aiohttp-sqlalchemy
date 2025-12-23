@@ -2,26 +2,24 @@
 Database module.
 
 Defines types, functions and primitives for the initialization, disposition and management of
-  database connections and their sessions.
+async database connections and sessions using SQLAlchemy 2.0.
 """
-import os
 import importlib.util
+import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Callable
 
-from sqlalchemy import create_engine as _sa_create_engine
-from sqlalchemy.schema import MetaData
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session, Session as SQLAlchemySession
+from sqlalchemy import MetaData
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 from example_web_app.config import db_option
-from example_web_app.background import run_async
 from example_web_app.logger import get_logger
-from example_web_app.models.base import BaseModelMixin
-
 
 __all__ = [
+    "Base",
+    "get_session",
     "transactional_session",
     "DatabaseManager",
     "db",
@@ -31,187 +29,140 @@ __all__ = [
 _logger = get_logger()
 
 
-###
-# Common Errors
-#
+class Base(DeclarativeBase):
+    """SQLAlchemy 2.0 declarative base class."""
+    metadata = MetaData(schema=db_option('schema'))
+
+
 class DatabaseNotInitialized(Exception):
+    """Raised when database operations are attempted before initialization."""
     def __init__(self, *args, **kwargs):
-        super(DatabaseNotInitialized, self).__init__(args, kwargs)
+        super().__init__(*args, **kwargs)
 
 
-###
-# Context Manager for Transactional Session Management
-#
-class transactional_session:
-    """
-    Context manager which provides transactional session management.
-    Supports the sync/async context manager protocols.
-    """
-    def __init__(self, expire_on_commit: bool = True):
-        """
-        Initializer.
-        :param bool expire_on_commit: If True, will make a session the expires all objects in memory after commit;
-            otherwise, will make objects in memory accessible even after session.commit() is called.
-        """
-        if db.Session is None or db.OnCommitExpiringSession is None:
-            raise DatabaseNotInitialized("The global database.db singleton is not initialized!")
-
-        self._session = None
-        self._expire_on_commit = expire_on_commit
-
-    ###
-    # Synchronous context manager protocol
-    #
-    def __enter__(self) -> SQLAlchemySession:
-        if self._expire_on_commit is True:
-            self._session = db.OnCommitExpiringSession()
-        else:
-            self._session = db.Session()
-
-        return self._session
-
-    def __exit__(self, exc_type, exc, tb):
-        try:
-            self._session.commit()
-        except Exception as e:
-            self._session.rollback()
-            _logger.error(e)
-            raise e
-        finally:
-            self._session.close()
-
-    ###
-    # Asynchronous context manager protocol
-    #
-    async def __aenter__(self) -> SQLAlchemySession:
-        if self._expire_on_commit is True:
-            self._session = db.OnCommitExpiringSession()
-        else:
-            self._session = db.Session()
-
-        return self._session
-
-    async def __aexit__(self, exc_type, exc, tb):
-        try:
-            await run_async(self._session.commit)
-        except Exception as e:
-            await run_async(self._session.rollback)
-            _logger.error(e)
-            raise e
-        finally:
-            self._session.close()
-
-
-###
-# Database Manager
-#
 class DatabaseManager:
     """
-    Configuration class for DB that encapsulates engine and configured class for creating scoped session instances.
+    Configuration class for DB that encapsulates async engine and session maker.
     """
     def __init__(self):
-        ###
-        # Private database engine and metadata attributes.
-        #
-        self._engine = None
-        self._metadata = MetaData(schema=db_option('schema'))
-
-        ###
-        # Session Factory classes, later initialized in self.initialize() method.
-        #
-        # The self.Session corresponds to a session factory that doesn't expire ORM instances from memory
-        #   after getting committed.
-        #
-        # The self.OnCommitExpiringSession corresponds to a session factory that expires ORM instances from
-        #   memory after getting committed.
-        #
-        self.Session = None
-        self.OnCommitExpiringSession = None
-
-        ###
-        # Declarative Base Model class.
-        #
-        self.BaseModel = declarative_base(
-            cls=BaseModelMixin,
-            metadata=MetaData(schema=db_option('schema')))
+        self._engine: AsyncEngine | None = None
+        self._session_maker: async_sessionmaker[AsyncSession] | None = None
 
     @property
-    def engine(self) -> Engine:
+    def engine(self) -> AsyncEngine | None:
         return self._engine
 
-    @classmethod
-    def create_database_engine(cls) -> Engine:
-        """
-        Creates a new SQLAlchemy database engine (sqlalchemy.engine.base.Engine) and returns it.
+    @property
+    def session_maker(self) -> async_sessionmaker[AsyncSession] | None:
+        return self._session_maker
 
-        :return: a working SQLAlchemy database engine
+    def get_database_url(self) -> str:
         """
-        ###
-        # Database configuration options
-        #
-        # Database connection settings
-        cfg_host = db_option('host')
-        cfg_port = db_option('port')
-        cfg_dbname = db_option('name')
-        cfg_user = db_option('user')
+        Build the async database URL from configuration.
+        """
+        host = db_option('host')
+        port = db_option('port')
+        name = db_option('name')
+        user = db_option('user')
+        password = os.environ.get('DB_PASSWORD', '')
 
-        # Database connection pool settings
+        if password:
+            return f'postgresql+asyncpg://{user}:{password}@{host}:{port}/{name}'
+        return f'postgresql+asyncpg://{user}@{host}:{port}/{name}'
+
+    def initialize(self, db_url: str | None = None):
+        """
+        Initialize the async database engine and session maker.
+
+        :param db_url: Optional database URL. If not provided, builds from config.
+        """
+        if db_url is None:
+            db_url = self.get_database_url()
+
+        # Connection pool settings
         min_pool_size = int(db_option('min_connection_pool_size'))
         max_pool_size = int(db_option('max_connection_pool_size'))
 
         if max_pool_size < min_pool_size:
             raise ValueError("Max Pool Size cannot be lower than Min Pool Size!")
 
-        max_pool_overflow = max_pool_size - min_pool_size
         pool_recycle_time = int(db_option('connection_pool_recycle_time'))
 
-        # Database connection string
-        db_uri = f'postgresql://{cfg_user}@{cfg_host}:{cfg_port}/{cfg_dbname}'
+        self._engine = create_async_engine(
+            db_url,
+            pool_size=min_pool_size,
+            max_overflow=max_pool_size - min_pool_size,
+            pool_recycle=pool_recycle_time,
+            echo=False,
+        )
 
-        return _sa_create_engine(
-            db_uri, encoding='utf-8', pool_size=min_pool_size, max_overflow=max_pool_overflow,
-            pool_recycle=pool_recycle_time)
+        self._session_maker = async_sessionmaker(
+            self._engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
 
-    def initialize(self, db_engine: Engine=None, scope_function: Callable = None):
-        """
-        Configure class for creating scoped sessions.
-
-        :param db_engine: DB connection engine.
-        :param scope_function: a function for scoping database connections.
-        """
-        # Set or initialize the database engine
-        if db_engine is None:
-            self._engine = self.create_database_engine()
-        else:
-            self._engine = db_engine
-
-        # Create the session factory classes
-        self.Session = scoped_session(
-            sessionmaker(bind=self._engine, expire_on_commit=False),
-            scopefunc=scope_function)
-
-        self.OnCommitExpiringSession = scoped_session(
-            sessionmaker(bind=self._engine, expire_on_commit=True),
-            scopefunc=scope_function)
-
-        # Import all model modules. SQLAlchemy doesn't do auto-discovery, so relationships don't
-        # work if we don't import them all before usage.
-        # Also I can't just do `from example_web_app.models import *` here, because in py3, the * is only
-        # allowed at the module level
+        # Import all model modules for relationship discovery
         import_all_models()
 
-    def cleanup(self):
+        _logger.info(f"Database initialized with engine: {db_url.split('@')[-1]}")
+
+    async def cleanup(self):
         """
-        Cleans up the database connection pool.
+        Clean up database connections.
         """
         if self._engine is not None:
-            self._engine.dispose()
+            await self._engine.dispose()
+            _logger.info("Database engine disposed")
 
 
-def _package_contents(package_name):
+# Global database manager instance
+db = DatabaseManager()
+
+
+@asynccontextmanager
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Given a package name ('example_web_app.models') will return all the modules in that package
-    Source: https://stackoverflow.com/questions/487971/is-there-a-standard-way-to-list-names-of-python-modules-in-a-package
+    Async context manager that yields a database session.
+
+    Usage:
+        async with get_session() as session:
+            result = await session.execute(select(Model))
+    """
+    if db.session_maker is None:
+        raise DatabaseNotInitialized("Database not initialized. Call db.initialize() first.")
+
+    async with db.session_maker() as session:
+        yield session
+
+
+@asynccontextmanager
+async def transactional_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Async context manager that provides transactional session management.
+    Automatically commits on success, rolls back on exception.
+
+    Usage:
+        async with transactional_session() as session:
+            session.add(new_record)
+            # Auto-commits on exit, auto-rollbacks on exception
+    """
+    if db.session_maker is None:
+        raise DatabaseNotInitialized("Database not initialized. Call db.initialize() first.")
+
+    async with db.session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception as e:
+            await session.rollback()
+            _logger.error(f"Transaction rolled back: {e}")
+            raise
+
+
+def _package_contents(package_name: str) -> set[str]:
+    """
+    Given a package name ('example_web_app.models') will return all the modules in that package.
     """
     spec = importlib.util.find_spec(package_name)
     if spec is None:
@@ -236,17 +187,7 @@ def _package_contents(package_name):
 
 def import_all_models():
     """
-    SQLAlchemy doesn't auto-discover models.
-    Models with relationships don't work if we don't load all the modules involved in the relationship
-    Basically all our models are related via relationships
-    We therefore besicaly need to import all model modules manually before using any of them
+    Import all model modules for SQLAlchemy relationship discovery.
     """
     for full_module_name in _package_contents('example_web_app.models'):
         importlib.import_module(full_module_name)
-
-
-###
-# Database Extension
-#
-db = DatabaseManager()
-

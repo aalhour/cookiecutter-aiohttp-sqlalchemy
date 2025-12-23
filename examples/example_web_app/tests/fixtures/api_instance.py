@@ -1,10 +1,9 @@
 from bravado.client import SwaggerClient
-from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
+from bravado_core.spec import Spec
 
-from tests.conftest import TEST_PORT
 from example_web_app.logger import get_logger
-
+from tests.conftest import TEST_PORT
 
 _logger = get_logger()
 

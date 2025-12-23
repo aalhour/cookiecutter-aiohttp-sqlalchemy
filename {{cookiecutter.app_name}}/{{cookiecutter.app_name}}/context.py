@@ -3,13 +3,11 @@ Context management module using Python's native contextvars.
 
 Provides request-scoped context variables for async handlers.
 """
-
 import contextvars
-from typing import Optional, Any
-
+from typing import Any
 
 # Context variable for the current request ID
-_request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar('request_id', default=None)
+_request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar('request_id', default=None)
 
 
 def get(key: str, default: Any = None) -> Any:
@@ -31,7 +29,7 @@ def set(key: str, value: Any) -> None:
         _request_id_var.set(value)
 
 
-def get_request_id() -> Optional[str]:
+def get_request_id() -> str | None:
     """Get the current request ID."""
     return _request_id_var.get()
 
@@ -39,4 +37,3 @@ def get_request_id() -> Optional[str]:
 def set_request_id(request_id: str) -> contextvars.Token:
     """Set the current request ID and return a token for resetting."""
     return _request_id_var.set(request_id)
-

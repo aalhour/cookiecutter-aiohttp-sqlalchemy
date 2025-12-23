@@ -1,146 +1,244 @@
-# {{cookiecutter.app_name}}
+# {{cookiecutter.project_name}}
 
 {{cookiecutter.project_short_description}}
 
+## ✨ Features
 
-## Contents
-
-  * [Synopsis](#synopsis)
-  * [Dependencies](#dependencies)
-  * [API](#api)
-  * [How To Guides](#how-to-guides)
-    + [Quick Start with Docker](#quick-start-with-docker)
-    + [Local Setup](#local-setup)
-    + [Development](#development)
-    + [Testing](#testing)
-    + [Packaging](#packaging)
-  * [Configuration](#configuration)
-
-
-## Synopsis
-
-```bash
-# Using Docker (recommended)
-docker compose up
-
-# Or run locally
-bin/service {start|stop|status|restart}
-```
+- **Modern Python** - Built with Python 3.10+ and fully async
+- **SQLAlchemy 2.0** - Native async support with `asyncpg` driver
+- **Type Safety** - Full type hints with mypy support
+- **Auto Migrations** - Database migrations with Alembic
+- **API Documentation** - Swagger/OpenAPI docs included
+- **Structured Logging** - JSON logging with structlog
+- **Docker Ready** - Production-ready Docker Compose setup
+- **Code Quality** - Pre-commit hooks, Ruff linting, formatting
+- **CI/CD** - GitHub Actions workflow included
+- **Error Tracking** - Sentry integration built-in
 
 
-## Dependencies
+## 🚀 Quick Start
 
- * Python 3.10+
- * PostgreSQL 14+
- * See `requirements.txt` for Python dependencies
- * See `requirements_dev.txt` for development/testing dependencies
-
-
-## API
-
- * Health Check: `http://{{cookiecutter.server_host}}:{{cookiecutter.server_port}}/api/-/health`
- * Swagger UI: `http://{{cookiecutter.server_host}}:{{cookiecutter.server_port}}/api/v1.0/docs`
- * OpenAPI Schema: `{{cookiecutter.app_name}}/docs/swagger-v1.0.yaml`
-
-
-## How To Guides
-
-### Quick Start with Docker
-
-The fastest way to get started:
+### With Docker (Recommended)
 
 ```bash
-# Start the application with PostgreSQL
-docker compose up
-
-# Or run in detached mode
+# Start all services (app + PostgreSQL)
 docker compose up -d
 
 # Check status
 docker compose ps
 
 # View logs
-docker compose logs -f
+docker compose logs -f {{cookiecutter.app_name}}
 
 # Stop everything
-docker compose down
+docker compose down -v
 ```
 
-The API will be available at `http://localhost:{{cookiecutter.server_port}}`.
+The API is available at `http://localhost:{{cookiecutter.server_port}}`
 
-### Local Setup
+### Test the API
 
-1. Copy the configuration file:
 ```bash
-cp config/default.conf ~/.config/{{cookiecutter.app_name}}.conf
+# Health check
+curl http://localhost:{{cookiecutter.server_port}}/api/-/health
+
+# List all examples
+curl http://localhost:{{cookiecutter.server_port}}/api/v1.0/examples
+
+# Create a new example
+curl -X POST http://localhost:{{cookiecutter.server_port}}/api/v1.0/examples \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Example", "description": "A test item", "price": 19.99}'
+
+# Get example by ID
+curl http://localhost:{{cookiecutter.server_port}}/api/v1.0/examples/1
+
+# Update an example
+curl -X PUT http://localhost:{{cookiecutter.server_port}}/api/v1.0/examples/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Updated Example", "price": 29.99}'
+
+# Delete an example
+curl -X DELETE http://localhost:{{cookiecutter.server_port}}/api/v1.0/examples/1
 ```
 
-2. Install the application:
+
+## 📚 Documentation
+
+| Resource | URL |
+|----------|-----|
+| Swagger UI | http://localhost:{{cookiecutter.server_port}}/api/v1.0/docs |
+| Health Check | http://localhost:{{cookiecutter.server_port}}/api/-/health |
+| OpenAPI Spec | `{{cookiecutter.app_name}}/docs/swagger-v1.0.yaml` |
+
+
+## 🛠️ Development Setup
+
+### Prerequisites
+
+- Python 3.10+
+- PostgreSQL 14+ (or Docker)
+- Make
+
+### Local Development
+
 ```bash
-make clean install
-```
+# Install development dependencies
+make install-dev
 
-3. Make sure PostgreSQL is running and update your config with database credentials.
-
-4. Start the application:
-```bash
-bin/service start
-```
-
-### Development
-
-Start the development server with hot-reload:
-
-```bash
+# Start development server with auto-reload
 make dev-server
 ```
 
-### Testing
+### Available Make Commands
 
-Run the test suite:
+Run `make help` to see all available commands:
 
-```bash
-make test
+```
+Setup & Installation:
+  make install          Install the application
+  make install-dev      Install in development mode with dev dependencies
+
+Development:
+  make dev-server       Start development server with auto-reload
+
+Code Quality:
+  make lint             Run ruff linting
+  make format           Format code with ruff
+  make typecheck        Run mypy type checking
+  make pre-commit-run   Run all pre-commit hooks
+
+Testing:
+  make test             Install dev deps and run all tests
+  make coverage         Generate test coverage report
+
+Database Migrations:
+  make migrate-up       Apply all pending migrations
+  make migrate-down     Rollback the last migration
+  make migrate-create   Create a new migration (msg='description')
+
+Docker:
+  make docker-compose-up    Start all services
+  make docker-compose-down  Stop all services
 ```
 
-Run with coverage:
+
+## 🗄️ Database Migrations
+
+This project uses [Alembic](https://alembic.sqlalchemy.org/) for database migrations.
 
 ```bash
-make coverage
+# Create a new migration
+make migrate-create msg="add users table"
+
+# Apply all pending migrations
+make migrate-up
+
+# Rollback the last migration
+make migrate-down
+
+# View migration history
+make migrate-history
 ```
 
-### Packaging
-
-Build a distributable wheel:
-
-```bash
-make package
-```
-
-The wheel will be created in the `dist/` directory.
+**Note:** When running with Docker, migrations are automatically applied on startup.
 
 
-## Configuration
+## ⚙️ Configuration
 
-Configuration is managed via INI files located at `~/.config/{{cookiecutter.app_name}}.conf`.
-
-For Docker deployments, you can use environment variables. Copy `env.template` to `.env` and customize:
+Configuration is managed via environment variables. Copy `env.example` to `.env`:
 
 ```bash
-cp env.template .env
+cp env.example .env
 # Edit .env with your values
-docker compose up
 ```
 
-### Configuration Options
+### Environment Variables
 
-| Section | Option | Description |
-|---------|--------|-------------|
-| `server` | `host` | Server bind address (default: 0.0.0.0) |
-| `server` | `port` | Server port (default: {{cookiecutter.server_port}}) |
-| `db` | `host` | PostgreSQL host |
-| `db` | `port` | PostgreSQL port (default: 5432) |
-| `db` | `name` | Database name |
-| `db` | `user` | Database user |
-| `db` | `schema` | Database schema (default: public) |
-| `sentry` | `dsn` | Sentry DSN for error tracking (optional) |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_HOST` | `0.0.0.0` | Server bind address |
+| `SERVER_PORT` | `{{cookiecutter.server_port}}` | Server port |
+| `DB_HOST` | `{{cookiecutter.db_host}}` | PostgreSQL host |
+| `DB_PORT` | `{{cookiecutter.db_port}}` | PostgreSQL port |
+| `DB_NAME` | `{{cookiecutter.db_name}}` | Database name |
+| `DB_USER` | `{{cookiecutter.db_user}}` | Database user |
+| `DB_PASSWORD` | | Database password |
+| `DB_SCHEMA` | `{{cookiecutter.db_schema}}` | Database schema |
+| `SENTRY_DSN` | | Sentry DSN for error tracking |
+| `LOGGING_LEVEL` | `DEBUG` | Logging level |
+
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage report
+make coverage
+
+# Run specific test types
+make test-unit
+make test-integration
+```
+
+
+## 📦 Project Structure
+
+```
+{{cookiecutter.app_name}}/
+├── {{cookiecutter.app_name}}/           # Application package
+│   ├── app.py                           # Application factory
+│   ├── config.py                        # Pydantic settings
+│   ├── database.py                      # SQLAlchemy async setup
+│   ├── routes.py                        # URL routing
+│   ├── logger.py                        # Structured logging
+│   ├── middlewares.py                   # Aiohttp middlewares
+│   ├── controllers/                     # API controllers
+│   │   ├── base.py                      # Base controller class
+│   │   ├── example_api.py               # Example CRUD controller
+│   │   └── health_api.py                # Health check endpoint
+│   ├── models/                          # SQLAlchemy models
+│   │   ├── base.py                      # Base model mixin
+│   │   └── example.py                   # Example model
+│   └── docs/                            # OpenAPI/Swagger specs
+├── alembic/                             # Database migrations
+│   ├── env.py                           # Alembic configuration
+│   └── versions/                        # Migration scripts
+├── tests/                               # Test suite
+│   ├── fixtures/                        # Test fixtures
+│   └── test_unit/                       # Unit tests
+├── config/                              # Configuration templates
+├── .github/workflows/                   # CI/CD workflows
+├── docker-compose.yaml                  # Docker Compose setup
+├── Dockerfile                           # Multi-stage Docker build
+├── Makefile                             # Development commands
+├── pyproject.toml                       # Project metadata
+└── requirements.txt                     # Python dependencies
+```
+
+
+## 🔧 Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Web Framework | [aiohttp](https://docs.aiohttp.org/) |
+| ORM | [SQLAlchemy 2.0](https://www.sqlalchemy.org/) |
+| Database Driver | [asyncpg](https://github.com/MagicStack/asyncpg) |
+| Migrations | [Alembic](https://alembic.sqlalchemy.org/) |
+| Configuration | [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) |
+| Logging | [structlog](https://www.structlog.org/) |
+| Error Tracking | [Sentry](https://sentry.io/) |
+| Linting | [Ruff](https://docs.astral.sh/ruff/) |
+| Type Checking | [mypy](https://mypy.readthedocs.io/) |
+
+
+## 📝 License
+
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+
+
+## 👤 Author
+
+**{{cookiecutter.author_name}}** - [{{cookiecutter.author_email}}](mailto:{{cookiecutter.author_email}})

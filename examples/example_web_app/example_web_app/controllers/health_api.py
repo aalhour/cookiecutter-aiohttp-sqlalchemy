@@ -1,9 +1,8 @@
 from aiohttp import web
 
 from example_web_app.controllers.base import BaseJsonApiController
-from example_web_app.models.health import HealthStatus
 from example_web_app.logger import get_logger
-
+from example_web_app.models.health import HealthStatus
 
 _logger = get_logger()
 

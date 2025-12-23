@@ -3,7 +3,6 @@ from aiohttp.test_utils import TestClient, TestServer, unused_port
 
 from example_web_app.app import create_app
 
-
 TEST_PORT = unused_port()
 
 

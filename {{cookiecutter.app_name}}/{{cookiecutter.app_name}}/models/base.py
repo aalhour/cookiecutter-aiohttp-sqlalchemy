@@ -1,18 +1,11 @@
 """
 Base Models module
+
+This module re-exports the Base class from the database module for convenience.
 """
 
+from {{cookiecutter.app_name}}.database import Base
 
 __all__ = [
-    "BaseModelMixin",
+    "Base",
 ]
-
-
-class BaseModelMixin:
-    """
-    A Mixin class which defines reusable methods for all other data models.
-
-    WARNING: DO *NOT* USE THIS AS A BASE CLASS FOR YOUR DECLARATIVE MODELS.
-    """
-    pass
-

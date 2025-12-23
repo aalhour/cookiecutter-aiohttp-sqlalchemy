@@ -1,20 +1,19 @@
 """
-Sentry Middleware for Aiohttp
+Middleware modules for Aiohttp.
 
-Source: https://docs.sentry.io/platforms/python/integrations/aiohttp/
+Provides Sentry integration and request context management.
 """
-
 import uuid
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 import sentry_sdk
-from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from aiohttp import web
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 
-from {{cookiecutter.app_name}} import APP_NAME
+from {{cookiecutter.app_name}} import APP_NAME, context
 from {{cookiecutter.app_name}}.config import sentry_option
-from {{cookiecutter.app_name}} import context
-
+from {{cookiecutter.app_name}}.logger import bind_context, clear_context
 
 __all__ = [
     "sentry_middleware_factory",
@@ -22,16 +21,19 @@ __all__ = [
 ]
 
 
-def sentry_middleware_factory(sentry_kwargs=None):
+def sentry_middleware_factory(sentry_kwargs: dict[str, Any] | None = None):
     """
     Aiohttp Middleware for logging error messages automatically on Sentry.
     Uses modern sentry-sdk with AioHttpIntegration.
+
+    Args:
+        sentry_kwargs: Optional configuration dictionary for Sentry SDK.
     """
     if sentry_kwargs is None:
         sentry_kwargs = {}
 
     dsn = sentry_option("dsn")
-    
+
     # Initialize sentry-sdk with AioHttpIntegration
     sentry_sdk.init(
         dsn=dsn,
@@ -68,14 +70,28 @@ def sentry_middleware_factory(sentry_kwargs=None):
 @web.middleware
 async def request_context_middleware(request: web.Request, handler: Callable) -> web.Response:
     """
-    A Middleware that sets the current request's ID in the context, this helps in getting
-    the unique ID of the current request in handlers.
+    Middleware that sets up request context for logging and tracking.
+
+    Sets the current request's ID in the context, making it available
+    for structured logging and request tracking throughout the request lifecycle.
     """
     x_request_id_header = "X-Request-ID"
     request_id = request.headers.get(x_request_id_header, str(uuid.uuid4()))
+
+    # Set in context module for backwards compatibility
     context.set(x_request_id_header, request_id)
 
-    response = await handler(request)
-    response.headers[x_request_id_header] = context.get(x_request_id_header)
+    # Bind to structlog context for structured logging
+    bind_context(
+        request_id=request_id,
+        method=request.method,
+        path=request.path,
+    )
 
-    return response
+    try:
+        response = await handler(request)
+        response.headers[x_request_id_header] = request_id
+        return response
+    finally:
+        # Clear structlog context at end of request
+        clear_context()

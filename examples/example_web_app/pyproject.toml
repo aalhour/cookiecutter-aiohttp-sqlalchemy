@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "example_web_app"
+version = "1.0.0"
+description = "An Example Web API project powered by Aiohttp and SQLAlchemy"
+readme = "README.md"
+license = {text = "ISC"}
+authors = [
+    {name = "Ahmad Alhour", email = "me@aalhour.com"}
+]
+keywords = ["example_web_app", "aiohttp", "sqlalchemy", "api"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: ISC License (ISCL)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "example.com/api/v1.0"
+
+[project.scripts]
+run_example_web_app = "example_web_app.app:run_app"
+init_example = "example_web_app.init_example:init_example"
+
+[tool.setuptools]
+packages = ["example_web_app"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+"example_web_app" = [
+    "docs/*",
+    "templates/*",
+    "static/*",
+    "static/js/*",
+    "static/css/*",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["example_web_app"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+

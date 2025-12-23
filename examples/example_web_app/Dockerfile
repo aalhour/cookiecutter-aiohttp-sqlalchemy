@@ -14,10 +14,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install build dependencies
+# Install build dependencies (asyncpg requires no system libs)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and set working directory
@@ -60,11 +59,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DB_USER=${DB_USER} \
     DB_SCHEMA=${DB_SCHEMA}
 
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --shell /bin/bash app
+# Create non-root user (asyncpg requires no system libs at runtime)
+RUN useradd --create-home --shell /bin/bash app
 
 # Switch to non-root user
 USER app
@@ -76,10 +72,6 @@ COPY --from=builder --chown=app:app /root/.local /home/app/.local
 # Copy application code
 COPY --chown=app:app . /home/app/app
 
-# Setup config file
-RUN mkdir -p /home/app/.config && \
-    cp /home/app/app/config/default.conf /home/app/.config/example_web_app.conf
-
 WORKDIR /home/app/app
 
 # Expose the application port
@@ -89,5 +81,5 @@ EXPOSE ${SERVER_PORT}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${SERVER_PORT}/api/-/health')" || exit 1
 
-# Run the application
-ENTRYPOINT ["python", "-m", "example_web_app.app"]
+# Run the application (use CMD so docker-compose can override with migrations)
+CMD ["python", "-m", "example_web_app.app"]

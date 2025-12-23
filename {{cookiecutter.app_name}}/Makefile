@@ -1,248 +1,321 @@
 #############################################
 #                                           #
-# MAKEFILE FOR DEFINING A MANAGEMENT CLI    #
+#  {{cookiecutter.project_name}} Makefile   #
+#                                           #
+#  A comprehensive management CLI for       #
+#  development, testing, and deployment     #
 #                                           #
 #############################################
 
-# Setup the shell and python version.
-# It's necessary to set this because some environments don't link sh -> bash.
+# Shell and Python configuration
 SHELL := /bin/bash
 PYTHON := python3
 
-# Constants
-VENV_DIR_LINK = venv
-VENV_DIR = .{{cookiecutter.app_name}}-venv
-TEST_VENV_DIR = .testing-venv
-SHELL_NAME = bash
-RUN_DEV_SERVER = adev runserver -v {{cookiecutter.app_name}}/app.py --app-factory create_app -p 8137
+# Directory configuration
+VENV_DIR := .venv
+TEST_VENV_DIR := .testing-venv
 
-.PHONY: help clean clean-venv clean-temp-files venv install install-dev package dev-upgrade-deps test test-unit test-integration test-end-to-end pytest cover coverage lint flake8
+# Development server command
+DEV_SERVER_CMD := adev runserver -v {{cookiecutter.app_name}}/app.py --app-factory create_app -p 8137
+
+# Colors for terminal output (if supported)
+BLUE := \033[0;34m
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+NC := \033[0m  # No Color
+
+#############################################
+#  PHONY TARGETS                            #
+#############################################
+# Auto-generated from target definitions
+.PHONY: help \
+        clean clean-venv clean-temp-files \
+        venv venv-app venv-test \
+        install install-dev \
+        package \
+        dev-server dev-upgrade-deps \
+        test pytest test-unit test-integration test-end-to-end \
+        coverage \
+        lint format format-check typecheck \
+        pre-commit-install pre-commit-run \
+        migrate-init migrate-create migrate-up migrate-down migrate-history \
+        docker-build docker-run docker-compose-up docker-compose-down
 
 
-#################################
-#                               #
-# HELP                      	#
-#                               #
-#################################
+#############################################
+#  HELP                                     #
+#############################################
+
 help:
-	@echo "usage: make <command>"
-	@echo
-	@echo "The available commands are:"
-	@echo "  clean              [alias] for running \"clean-venv\" and \"clean-temp-files\" sequentially."
-	@echo "  clean-venv         to clean the virtualenv directories and links."
-	@echo "  clean-temp-files   to cleanup the project from temporary files."
-	@echo "  venv-app           to create the applications virtualenv and its symbolic links."
-	@echo "  venv-test          to create the testing virtualenv for hosting dev requirements and running tests."
-	@echo "  install            to install the app, runs \"venv\" automatically."
-	@echo "  install-dev        to install the app in editable mode, runs \"venv\" automatically."
-	@echo "  package            to create a package ready for deployment."
-	@echo "  dev-upgrade-deps   [dev-tool] runs \"clean\", \"install\" and then uses pip to upgrade requirements using the floating file."
-	@echo "  dev-server         [dev-tool] runs a development server with auto-reloading on source file changes."
-	@echo "  tox                to run the tests package on several Python run-times with tox."
-	@echo "  pytest             to run the entire tests package."
-	@echo "  test               [alias] for running \"install-dev\" and \"pytest\" sequentially."
-	@echo "  test-unit          to run the unit tests only (tests/unit_tests package)."
-	@echo "  test-integration   to run the integration tests only (tests/integration_tests package)."
-	@echo "  test-end-to-end    to run the end-to-end tests only (tests/end_to_end_tests package)."
-	@echo "  flake8             to run flake8 linting on the project."
-	@echo "  coverage           to generate unit tests coverage."
-	@echo "  help               to display this message."
-	@echo
-	@echo "All testing commands take a \"VERBOSITY\" argument which is by default set to 'vv'. It controls the verbosity of the pytest command. For example: \`make unit-tests VERBOSITY=qq\`."
+	@echo ""
+	@echo "$(BLUE){{cookiecutter.project_name}} - Development Commands$(NC)"
+	@echo ""
+	@echo "$(GREEN)Setup & Installation:$(NC)"
+	@echo "  make install          Install the application"
+	@echo "  make install-dev      Install in development mode with dev dependencies"
+	@echo "  make venv             Create virtual environment"
+	@echo ""
+	@echo "$(GREEN)Development:$(NC)"
+	@echo "  make dev-server       Start development server with auto-reload"
+	@echo "  make dev-upgrade-deps Upgrade all dependencies to latest versions"
+	@echo ""
+	@echo "$(GREEN)Code Quality:$(NC)"
+	@echo "  make lint             Run ruff linting"
+	@echo "  make format           Format code with ruff"
+	@echo "  make format-check     Check code formatting"
+	@echo "  make typecheck        Run mypy type checking"
+	@echo "  make pre-commit-run   Run all pre-commit hooks"
+	@echo ""
+	@echo "$(GREEN)Testing:$(NC)"
+	@echo "  make test             Install dev deps and run all tests"
+	@echo "  make pytest           Run all tests (requires install-dev first)"
+	@echo "  make test-unit        Run unit tests only"
+	@echo "  make coverage         Generate test coverage report"
+	@echo ""
+	@echo "$(GREEN)Database Migrations:$(NC)"
+	@echo "  make migrate-up       Apply all pending migrations"
+	@echo "  make migrate-down     Rollback the last migration"
+	@echo "  make migrate-create   Create a new migration (msg='description')"
+	@echo "  make migrate-history  Show migration history"
+	@echo ""
+	@echo "$(GREEN)Docker:$(NC)"
+	@echo "  make docker-build      Build the Docker image"
+	@echo "  make docker-run        Run the Docker container"
+	@echo "  make docker-compose-up Start all services with Docker Compose"
+	@echo "  make docker-compose-down Stop all services"
+	@echo ""
+	@echo "$(GREEN)Cleanup:$(NC)"
+	@echo "  make clean            Clean all temporary files and venvs"
+	@echo "  make clean-venv       Remove virtual environments"
+	@echo "  make clean-temp-files Remove cache and build artifacts"
+	@echo ""
+	@echo "$(GREEN)Packaging:$(NC)"
+	@echo "  make package          Create a wheel package for deployment"
+	@echo ""
 
 
-#################################
-#                               #
-# CLEAN-UP                  	#
-#                               #
-#################################
+#############################################
+#  CLEANUP                                  #
+#############################################
+
 clean-venv:
-	@echo "####################################################"
-	@echo "# CLEANING UP THE VIRTUAL ENVIRONMENT              #"
-	@echo "####################################################"
-	@rm -rf $(VENV_DIR)
-	@rm -rf $(VENV_DIR_LINK)
-	@rm -rf $(TEST_VENV_DIR)
+	@echo ">>> Cleaning virtual environments..."
+	@rm -rf $(VENV_DIR) $(TEST_VENV_DIR) venv
 	@echo "Done!"
-
 
 clean-temp-files:
-	@echo "####################################################"
-	@echo "# CLEANING UP CACHED AND TMP FILES                 #"
-	@echo "####################################################"
-	@rm -rf build
-	@rm -rf dist
-	@rm -rf *.egg-info
-	@rm -rf .tox
-	@rm -rf htmlcov
-	@rm -rf .cache
-	@rm -rf .pytest_cache
-	@find . -name "*.*,cover" -delete
-	@find . -name "*.pyc" -delete
-	@find . -name "*.pyo" -delete
-	@find . -name "__pycache__" -exec rm -rf {} \; || echo "";
+	@echo ">>> Cleaning temporary files..."
+	@rm -rf build dist *.egg-info .tox htmlcov .cache .pytest_cache .mypy_cache .ruff_cache
+	@find . -name "*.*,cover" -delete 2>/dev/null || true
+	@find . -name "*.pyc" -delete 2>/dev/null || true
+	@find . -name "*.pyo" -delete 2>/dev/null || true
+	@find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 	@echo "Done!"
-
 
 clean: clean-venv clean-temp-files
 
 
-#################################
-#                               #
-# VIRTUAL ENVIRONMENT       	#
-#                               #
-#################################
+#############################################
+#  VIRTUAL ENVIRONMENT                      #
+#############################################
+
 log-py-version:
-	@echo -n "[INFO] Make is using the Python version: "
-	@$(PYTHON) -c 'import sys; v = sys.version_info; print(f"{v.major}.{v.minor}.{v.micro}-{v.releaselevel}");'
+	@echo -n "Using Python: "
+	@$(PYTHON) -c 'import sys; v = sys.version_info; print(f"{v.major}.{v.minor}.{v.micro}")'
 
-
-venv-app:
-	@echo "####################################################"
-	@echo "# CREATING THE VIRTUAL ENVIRONMENT                 #"
-	@echo "####################################################"
-	@echo "===================================================="
-	@$(MAKE) -s log-py-version
-	@echo "===================================================="
+venv-app: log-py-version
+	@echo ">>> Creating application virtual environment..."
 	@test -d $(VENV_DIR) || $(PYTHON) -m venv $(VENV_DIR)
-	@test -d $(VENV_DIR_LINK) || ln -s $(VENV_DIR) $(VENV_DIR_LINK)
+	@echo "Done! Activate with: source $(VENV_DIR)/bin/activate"
+
+venv-test: log-py-version
+	@echo ">>> Creating test virtual environment..."
+	@test -d $(TEST_VENV_DIR) || $(PYTHON) -m venv $(TEST_VENV_DIR)
 	@echo "Done!"
 
-
-venv-test:
-	@echo "####################################################"
-	@echo "# CREATING THE >>> TEST <<< VIRTUAL ENVIRONMENT    #"
-	@echo "####################################################"
-	@echo "===================================================="
-	@$(MAKE) -s log-py-version
-	@echo "===================================================="
-	@test -d $(TEST_VENV_DIR) || $(PYTHON) -m venv $(TEST_VENV_DIR);
-	@echo "Done!"
+venv: venv-app
 
 
-#################################
-#                               #
-# INSTALLATION                  #
-#                               #
-#################################
+#############################################
+#  INSTALLATION                             #
+#############################################
+
 install: venv-app
-	@echo "####################################################"
-	@echo "# ACTIVATING VENV & RESOLVING DEPENDENCIES         #"
-	@echo "####################################################"
-	@. $(VENV_DIR)/bin/activate \
-		&& pip install -U pip \
-		&& pip install -U .
+	@echo ">>> Installing application..."
+	@. $(VENV_DIR)/bin/activate && \
+		pip install -U pip && \
+		pip install -r requirements.txt && \
+		pip install -e .
 	@echo "Done!"
-
 
 install-dev: venv-test
-	@echo "####################################################"
-	@echo "# CREATING TESTING VENV AND INSTALLING DEV DEPS    #"
-	@echo "####################################################"
-	@. $(TEST_VENV_DIR)/bin/activate \
-		&& pip install -U pip \
-		&& pip install -e . \
-		&& pip install -U -r requirements_dev.txt
+	@echo ">>> Installing development environment..."
+	@. $(TEST_VENV_DIR)/bin/activate && \
+		pip install -U pip && \
+		pip install -r requirements.txt -r requirements_dev.txt && \
+		pip install -e .
 	@echo "Done!"
 
 
-#################################
-#                               #
-# PACKAGING                     #
-#                               #
-#################################
-package:
-	@echo "####################################################"
-	@echo "# CREATING A PACKAGE FOR DEPLOYMENT                #"
-	@echo "####################################################"
-	@command -v wheel >/dev/null 2>&1 || { pip install wheel; }
-	@git submodule update --init
+#############################################
+#  PACKAGING                                #
+#############################################
+
+package: venv-app
+	@echo ">>> Creating deployment package..."
 	@rm -rf dist
-	@. $(VENV_DIR)/bin/activate \
-		&& pip install -U setuptools wheel \
-		&& $(PYTHON) setup.py bdist_wheel --dist-dir=dist
-	@echo "Done!"
+	@. $(VENV_DIR)/bin/activate && \
+		pip install -U build && \
+		$(PYTHON) -m build --wheel --outdir dist
+	@echo "Done! Package available in dist/"
 
 
-#################################
-#                               #
-# DEVELOPMENT TOOLS             #
-#                               #
-#################################
+#############################################
+#  DEVELOPMENT TOOLS                        #
+#############################################
+
 dev-upgrade-deps: clean install
-	@echo "####################################################"
-	@echo "# UPGRADING DEPENDENCIES                           #"
-	@echo "####################################################"
-	@. $(VENV_DIR)/bin/activate \
-		&& pip install -U -r requirements_floating.txt \
-		&& pip freeze | egrep -v {{cookiecutter.app_name}} > requirements.txt
-	@echo "===================================================="
-	@git diff requirements.txt
-	@echo "===================================================="
-	@echo "Done!"
-
+	@echo ">>> Upgrading dependencies..."
+	@. $(VENV_DIR)/bin/activate && \
+		pip install -U -r requirements_floating.txt && \
+		pip freeze | grep -v {{cookiecutter.app_name}} > requirements.txt
+	@echo "Updated requirements.txt:"
+	@git diff requirements.txt || true
 
 dev-server:
-	@echo "####################################################"
-	@echo "# STARTING THE >>> DEVELOPMENT <<< SERVER          #"
-	@echo "####################################################"
-	@test -d $(TEST_VENV_DIR) && test -s $(TEST_VENV_DIR)/bin/adev || { \
-		echo "Please run 'make install-dev' first!"; \
-		exit 1; \
-	}
-	@. $(TEST_VENV_DIR)/bin/activate && $(RUN_DEV_SERVER)
+	@echo ">>> Starting development server..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && $(DEV_SERVER_CMD)
 
 
-#################################
-#                               #
-# TESTS AND COVERAGE            #
-#                               #
-#################################
-VERBOSITY=vq
-PYTEST_ARGS=
+#############################################
+#  TESTING                                  #
+#############################################
+
+VERBOSITY := vq
+PYTEST_ARGS :=
+
 pytest:
-	@echo "####################################################"
-	@echo "# [TESTING] RUNNING ALL TESTS                      #"
-	@echo "####################################################"
-	@test -d $(TEST_VENV_DIR) || { echo "Please run 'make install-dev' first!"; exit 1; }
-	@. $(TEST_VENV_DIR)/bin/activate && py.test --cache-clear -$(VERBOSITY) $(PYTEST_ARGS)
+	@echo ">>> Running tests..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && pytest --cache-clear -$(VERBOSITY) $(PYTEST_ARGS)
+
+test: install-dev pytest
+
+test-unit:
+	@$(MAKE) -s pytest PYTEST_ARGS="tests/test_unit"
+
+test-integration:
+	@$(MAKE) -s pytest PYTEST_ARGS="tests/test_integration"
+
+test-end-to-end:
+	@$(MAKE) -s pytest PYTEST_ARGS="tests/test_end_to_end"
+
+coverage:
+	@echo ">>> Generating coverage report..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && \
+		coverage run --source {{cookiecutter.app_name}}/ -m pytest --cache-clear -$(VERBOSITY) tests/test_unit && \
+		coverage report && \
+		coverage html
+	@echo "Coverage report: htmlcov/index.html"
 
 
-VERBOSITY=vq
-test: install-dev
-	@$(MAKE) -s pytest VERBOSITY=$(VERBOSITY)
+#############################################
+#  CODE QUALITY                             #
+#############################################
+
+lint:
+	@echo ">>> Linting with ruff..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && ruff check {{cookiecutter.app_name}}/ tests/
+
+format:
+	@echo ">>> Formatting with ruff..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && ruff format {{cookiecutter.app_name}}/ tests/
+
+format-check:
+	@echo ">>> Checking format with ruff..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && ruff format --check {{cookiecutter.app_name}}/ tests/
+
+typecheck:
+	@echo ">>> Type checking with mypy..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && mypy {{cookiecutter.app_name}}/
 
 
-VERBOSITY=vq
-cover coverage:
-	@echo "####################################################"
-	@echo "# [TESTING] ANALYSING TEST COVERAGE                #"
-	@echo "####################################################"
-	@test -d $(TEST_VENV_DIR) || { echo "Please run 'make install-dev' first!"; exit 1; }
-	@. $(TEST_VENV_DIR)/bin/activate \
-		&& coverage run --source {{cookiecutter.app_name}}/ `which py.test` --cache-clear -$(VERBOSITY) tests/unit_tests; \
-		coverage report; \
-		coverage html;
-	@echo "coverage report done! To see it run something like 'chromium-browser htmlcov/index.html'"
+#############################################
+#  PRE-COMMIT                               #
+#############################################
+
+pre-commit-install:
+	@echo ">>> Installing pre-commit hooks..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && pre-commit install
+	@echo "Done!"
+
+pre-commit-run:
+	@echo ">>> Running pre-commit hooks..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && pre-commit run --all-files
 
 
-lint flake8:
-	@echo "####################################################"
-	@echo "# [TESTING] LINTING CODE WITH FLAK8                #"
-	@echo "####################################################"
-	@test -d $(TEST_VENV_DIR) || { echo "Please run 'make install-dev' first!"; exit 1; }
-	@. $(TEST_VENV_DIR)/bin/activate && flake8 ty/
+#############################################
+#  DATABASE MIGRATIONS                      #
+#############################################
+
+migrate-init:
+	@echo ">>> Initializing Alembic..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && alembic init alembic
+	@echo "Done!"
+
+migrate-create:
+	@echo ">>> Creating migration: $(msg)..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@test -n "$(msg)" || { echo "Usage: make migrate-create msg='migration description'"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && alembic revision --autogenerate -m "$(msg)"
+	@echo "Done!"
+
+migrate-up:
+	@echo ">>> Applying migrations..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && alembic upgrade head
+	@echo "Done!"
+
+migrate-down:
+	@echo ">>> Rolling back migration..."
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && alembic downgrade -1
+	@echo "Done!"
+
+migrate-history:
+	@echo ">>> Migration history:"
+	@test -d $(TEST_VENV_DIR) || { echo "Run 'make install-dev' first!"; exit 1; }
+	@. $(TEST_VENV_DIR)/bin/activate && alembic history --verbose
 
 
-#################################
-#                               #
-# DOCKERIZATION                 #
-#                               #
-#################################
+#############################################
+#  DOCKER                                   #
+#############################################
+
 docker-build:
+	@echo ">>> Building Docker image..."
 	@docker build -t {{cookiecutter.app_name}}:latest .
+	@echo "Done!"
 
 docker-run:
-	@docker run --rm -it -p {{cookiecutter.server_port}}:{{cookiecutter.server_port}} {{cookiecutter.app_name}}
+	@echo ">>> Running Docker container..."
+	@docker run --rm -it -p {{cookiecutter.server_port}}:{{cookiecutter.server_port}} {{cookiecutter.app_name}}:latest
 
-docker-build-run: docker-build docker-run
+docker-compose-up:
+	@echo ">>> Starting services with Docker Compose..."
+	@docker compose up -d
+	@echo "Services started. View logs with: docker compose logs -f"
+
+docker-compose-down:
+	@echo ">>> Stopping services..."
+	@docker compose down -v
+	@echo "Done!"

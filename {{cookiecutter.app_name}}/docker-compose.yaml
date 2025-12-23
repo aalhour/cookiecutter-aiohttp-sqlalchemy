@@ -43,6 +43,9 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    # Run migrations before starting the app
+    command: >
+      sh -c "cd /home/app/app && alembic upgrade head && python -m {{cookiecutter.app_name}}.app"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:{{cookiecutter.server_port}}/api/-/health')"]
       interval: 30s

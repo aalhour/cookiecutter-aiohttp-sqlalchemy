@@ -10,7 +10,7 @@ produces:
   - "application/json"
 consumes:
   - "application/json"
-basePath: "/{{cookiecutter.app_name}}/api/v1.0"
+basePath: "/api/v1.0"
 
 
 ###################################################################
@@ -41,24 +41,88 @@ definitions:
     required:
       - "id"
       - "name"
+      - "is_active"
     properties:
       id:
-        type: "integer"
-        example: 1
+        type: "string"
+        example: "1"
       name:
         type: "string"
-        example: "best example ever!"
+        example: "Example Item"
+      description:
+        type: "string"
+        x-nullable: true
+        example: "A detailed description of the item"
+      price:
+        type: "number"
+        format: "float"
+        x-nullable: true
+        example: 19.99
+      is_active:
+        type: "boolean"
+        example: true
       created_at:
         type: "string"
         format: "datetime"
-        example: "2018-09-15T15:53:00"
-        description: "Non-nullable ISO 8601 datetime, with or without microseconds"
+        example: "2024-01-15T15:53:00"
+        description: "Non-nullable ISO 8601 datetime"
       updated_at:
         type: "string"
         format: "datetime"
-        x-nullable: True
-        example: "2018-10-01T12:37:12"
-        description: "Nullable ISO 8601 datetime, with or without microseconds"
+        x-nullable: true
+        example: "2024-01-16T12:37:12"
+        description: "Nullable ISO 8601 datetime"
+
+  ExampleCreate:
+    type: "object"
+    required:
+      - "name"
+    properties:
+      name:
+        type: "string"
+        example: "New Example"
+      description:
+        type: "string"
+        example: "Description of the new example"
+      price:
+        type: "number"
+        format: "float"
+        example: 29.99
+      is_active:
+        type: "boolean"
+        example: true
+        default: true
+
+  ExampleUpdate:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "Updated Example"
+      description:
+        type: "string"
+        example: "Updated description"
+      price:
+        type: "number"
+        format: "float"
+        example: 39.99
+      is_active:
+        type: "boolean"
+        example: false
+
+  Error:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        example: "The requested resource was not found."
+
+  DeleteResponse:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        example: "Example 1 deleted successfully"
 
 
 ###################################################################
@@ -73,11 +137,17 @@ paths:
     get:
       tags:
         - "Examples"
-      summary: "Return all Examples"
+      summary: "List all Examples"
       description: "Return all Examples from the Database"
       operationId: "getAllExamples"
       produces:
         - "application/json"
+      parameters:
+        - name: "active_only"
+          in: "query"
+          description: "Filter to active items only"
+          required: false
+          type: "boolean"
       responses:
         "200":
           description: "An array of examples"
@@ -86,24 +156,114 @@ paths:
             items:
               $ref: "#/definitions/Example"
 
+    post:
+      tags:
+        - "Examples"
+      summary: "Create a new Example"
+      description: "Create a new Example record"
+      operationId: "createExample"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "Example to create"
+          required: true
+          schema:
+            $ref: "#/definitions/ExampleCreate"
+      responses:
+        "201":
+          description: "Example created successfully"
+          schema:
+            $ref: "#/definitions/Example"
+        "400":
+          description: "Invalid request body"
+          schema:
+            $ref: "#/definitions/Error"
+
   /examples/{id}:
     get:
       tags:
-      - "Examples"
-      summary: "Return a single Example"
+        - "Examples"
+      summary: "Get Example by ID"
       description: "Return a single Example, given its ID"
       operationId: "getExampleById"
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
-      - name: "id"
-        in: "path"
-        description: "Example ID"
-        required: true
-        type: "integer"
+        - name: "id"
+          in: "path"
+          description: "Example ID"
+          required: true
+          type: "integer"
       responses:
         "200":
-          description: "Example"
+          description: "Example found"
           schema:
             $ref: "#/definitions/Example"
+        "404":
+          description: "Example not found"
+          schema:
+            $ref: "#/definitions/Error"
 
+    put:
+      tags:
+        - "Examples"
+      summary: "Update an Example"
+      description: "Update an existing Example by ID"
+      operationId: "updateExample"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Example ID"
+          required: true
+          type: "integer"
+        - name: "body"
+          in: "body"
+          description: "Fields to update"
+          required: true
+          schema:
+            $ref: "#/definitions/ExampleUpdate"
+      responses:
+        "200":
+          description: "Example updated successfully"
+          schema:
+            $ref: "#/definitions/Example"
+        "400":
+          description: "Invalid request body"
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: "Example not found"
+          schema:
+            $ref: "#/definitions/Error"
+
+    delete:
+      tags:
+        - "Examples"
+      summary: "Delete an Example"
+      description: "Delete an Example by ID"
+      operationId: "deleteExample"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Example ID"
+          required: true
+          type: "integer"
+      responses:
+        "200":
+          description: "Example deleted successfully"
+          schema:
+            $ref: "#/definitions/DeleteResponse"
+        "404":
+          description: "Example not found"
+          schema:
+            $ref: "#/definitions/Error"

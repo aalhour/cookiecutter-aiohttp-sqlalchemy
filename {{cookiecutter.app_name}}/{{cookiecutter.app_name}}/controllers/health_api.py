@@ -1,9 +1,8 @@
 from aiohttp import web
 
 from {{cookiecutter.app_name}}.controllers.base import BaseJsonApiController
-from {{cookiecutter.app_name}}.models.health import HealthStatus
 from {{cookiecutter.app_name}}.logger import get_logger
-
+from {{cookiecutter.app_name}}.models.health import HealthStatus
 
 _logger = get_logger()
 

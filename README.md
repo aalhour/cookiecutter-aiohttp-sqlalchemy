@@ -1,160 +1,245 @@
-# cookiecutter-aiohttp-sqlalchemy
+# 🍪 cookiecutter-aiohttp-sqlalchemy
 
-Fat and opinionated cookiecutter template for building async Web Apps powered by Aiohttp, SQLAlchemy and Swagger.
+A modern, opinionated [Cookiecutter](https://cookiecutter.readthedocs.io/) template for building **async Python web APIs** powered by Aiohttp, SQLAlchemy 2.0, and PostgreSQL.
 
-Check out the [Features](#features) section below for a short description of what this box packs for you. The [Code Examples](#code-examples) section showcases a code example of an async API using an SQLAlchemy Base Model.
+Generate a production-ready async REST API in seconds with database migrations, structured logging, Docker support, and CI/CD workflows—all pre-configured.
 
-If you want to see a **working example web app** generated using this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples) directory.
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Aiohttp](https://img.shields.io/badge/aiohttp-3.13+-green.svg)](https://docs.aiohttp.org/)
+[![SQLAlchemy 2.0](https://img.shields.io/badge/sqlalchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 
-## Contents
- 
-  * [Features](#features)
-  * [Requirements](#requirements)
-  * [Quick Start](#quick-start)
-  * [Code Examples](#code-examples)
- 
-## Features
 
- - [x] SQLALchemy Support:
-   - [x] `asyncio`-compatible: use `async/await` to execute db queries
-   - [x] Request-scoped DB Sessions via `contextvars`
-   - [x] Executor-based queries execution
-   - [x] Managed transactional support via contextmanager interface
- - [x] Swagger Support:
-   - [x] Separate Swagger YAML file
-   - [x] Auto-generation of Swagger UI
-   - [x] Docs served at: `/api/v1.0/docs`
-   - [x] Swagger JSON Schema served at: `/api/v1.0/docs/swagger.json`
- - [x] Development Server:
-   - [x] `make dev-server` starts an Aiohttp Dev Server (file-watch enabled)
- - [x] Docker Support:
-   - [x] Multi-stage `Dockerfile` with Python 3.12
-   - [x] `docker-compose.yaml` with PostgreSQL 16 and health checks
-   - [x] `make docker-build`: to build the image
-   - [x] `make docker-run`: to run the image
-   - [x] `make docker-build-run`: a shorthand for two of the above
- - [x] Independent Test Env:
-   - [x] `make install-dev` creates a separate virtualenv with all dev requirements
-   - [x] `make pytest` runs the `tests/` package from the testing virtualenv
-   - [x] `make coverage` runs test coverage analysis from the testing virtualenv
-   - [x] `make test` runs `make install-dev` and then `make pytest`
- - [x] Configuration Management:
-   - [x] Ini-file based configuration, see: `config/default.conf`
-   - [x] Environment variable support via `env.template`
- - [x] Management CLI:
-   - [x] `make install` to create a virtualenv and install the project
-   - [x] `make test` to run the tests
-   - [x] `make clean` to remove cached and built artifacts
-   - [x] `make help` to display more awesome commands
-   - [x] `make dev-upgrade-deps` upgrades all high-level dependencies
- - [x] Python packaging:
-   - [x] Auto-generated `setup.py` with project info
-   - [x] `make package` builds a distributable `wheel` of the project
- - [x] Error Tracking:
-   - [x] Sentry integration via `sentry-sdk`
- - [x] Docs:
-   - [x] README.md (see: [example](examples/example_web_app/README.md))
+## ✨ What You Get
 
-## Requirements
+| Feature | Description |
+|---------|-------------|
+| **SQLAlchemy 2.0 Async** | Native async/await with `asyncpg` driver—no thread pools needed |
+| **Alembic Migrations** | Database schema management with auto-generated migrations |
+| **Pydantic Settings** | Type-safe configuration via environment variables |
+| **Structured Logging** | JSON logs in production, colorful console in development (structlog) |
+| **Full CRUD Example** | Working Create, Read, Update, Delete API out of the box |
+| **Docker Ready** | Multi-stage Dockerfile + docker-compose with PostgreSQL |
+| **GitHub Actions CI** | Linting, type checking, testing, and Docker builds |
+| **Pre-commit Hooks** | Ruff linting and formatting on every commit |
+| **Swagger/OpenAPI** | Auto-generated API documentation at `/api/v1.0/docs` |
+| **Sentry Integration** | Error tracking ready to configure |
 
- * Python 3.10+ (tested with Python 3.12 and 3.14)
- * Aiohttp 3.13+
- * Aiohttp-Swagger
- * Psycopg2-binary
- * SQLAlchemy 1.4+
- * UVLoop
- * uJSON
- * Sentry-SDK
+
+## Examples
+
+**[View Example App →](examples/example_web_app/)**
 
 ## Quick Start
 
-First, grab cookiecutter if you don't have it and start the generation process:
+### 1. Generate Your Project
+
 ```bash
 pip install cookiecutter
-cookiecutter https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy
+cookiecutter gh:aalhour/cookiecutter-aiohttp-sqlalchemy
 ```
 
-### Option 1: Docker (Recommended)
+Answer the prompts (or accept defaults):
 
-Run everything with Docker Compose, which spins up PostgreSQL automatically:
+```
+app_name [example_web_app]: my_api
+project_name [Example Web App]: My API
+author_name [Your Name]: Jane Doe
+...
+```
+
+### 2. Run with Docker (Recommended)
+
 ```bash
-cd <your-app-name>
-docker compose up
+cd my_api
+docker compose up -d
 ```
 
-The API will be available at `http://localhost:9999` (or your configured port).
+That's it! Your API is running at `http://localhost:9999` with:
+- PostgreSQL database
+- Alembic migrations applied automatically
+- Health check endpoint ready
 
-### Option 2: Local Installation
+### 3. Test the API
 
-Install via the Makefile:
 ```bash
-make install
+# Health check
+curl http://localhost:9999/api/-/health
+
+# Create an item
+curl -X POST http://localhost:9999/api/v1.0/examples \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Item", "description": "A test item", "price": 29.99}'
+
+# List all items
+curl http://localhost:9999/api/v1.0/examples
+
+# Swagger docs
+open http://localhost:9999/api/v1.0/docs
 ```
 
-Copy the config file to your home directory:
+
+## Generated Project Structure
+
+```
+my_api/
+├── my_api/                    # Application package
+│   ├── app.py                 # Application factory
+│   ├── config.py              # Pydantic Settings configuration
+│   ├── database.py            # SQLAlchemy 2.0 async setup
+│   ├── logger.py              # Structlog configuration
+│   ├── routes.py              # URL routing
+│   ├── middlewares.py         # Aiohttp middlewares
+│   ├── controllers/           # API controllers (CRUD endpoints)
+│   ├── models/                # SQLAlchemy ORM models
+│   └── docs/                  # Swagger/OpenAPI YAML specs
+├── alembic/                   # Database migrations
+│   ├── env.py                 # Async migration environment
+│   └── versions/              # Migration scripts
+├── tests/                     # Pytest test suite
+├── .github/workflows/         # GitHub Actions CI
+├── docker-compose.yaml        # Docker Compose (app + PostgreSQL)
+├── Dockerfile                 # Multi-stage production build
+├── Makefile                   # Development commands
+├── pyproject.toml             # Project metadata & tools config
+└── env.example                # Environment variables template
+```
+
+
+## Development Workflow
+
 ```bash
-cp config/default.conf ~/.config/<your-app-name>.conf
+cd my_api
+
+# Install development environment
+make install-dev
+
+# Run tests
+make test
+
+# Start development server (with auto-reload)
+make dev-server
+
+# Run linting
+make lint
+
+# Run type checking
+make typecheck
+
+# Format code
+make format
+
+# Create a database migration
+make migrate-create msg="add users table"
+
+# Apply migrations
+make migrate-up
 ```
 
-Customize the config file with your database details:
-```ini
-[db]
-host = localhost
-port = 5432
-name = <database_name>
-schema = <schema_name>
-user = <database_user>
-```
 
-Start the application:
+## Configuration
+
+The generated app uses **environment variables** for configuration (via Pydantic Settings).
+
+Copy `env.example` to `.env` and customize:
+
 ```bash
-venv/bin/run_<your-app-name>
+cp env.example .env
 ```
 
-## Code Examples
+Key variables:
 
-The following is an example API code that tries to query the database using an SQLAlchemy Declarative Model:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_HOST` | `0.0.0.0` | Server bind address |
+| `SERVER_PORT` | `9999` | Server port |
+| `DB_HOST` | `localhost` | PostgreSQL host |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_NAME` | `example_db` | Database name |
+| `DB_USER` | `example` | Database user |
+| `DB_PASSWORD` | | Database password |
+| `SENTRY_DSN` | | Sentry error tracking DSN |
+
+
+## Code Example
+
+Here's what the generated async API code looks like:
+
+**Controller** (`controllers/example_api.py`):
 
 ```python
-class UsersApi:
-    async def get_user_by_id(self, request):
-        """
-        GET /api/v1.0/users/<id>
-        """
-        user_id = request.match_info.get('id')
-        
-        async with transactional_session() as db:
-            # `User` is an SQLAlchemy declarative class
-            user = await User.get_by_id(user_id, db)
-            
-            return self.json_response(user.serialized)
+class ExampleApiController(BaseJsonApiController):
+    async def get(self, request: web.Request) -> web.Response:
+        """GET /api/v1.0/examples - List all examples"""
+        async with transactional_session() as session:
+            examples = await Example.get_all(session)
+            return self.json_response([e.serialized for e in examples])
+
+    async def create(self, request: web.Request) -> web.Response:
+        """POST /api/v1.0/examples - Create a new example"""
+        data = await request.json()
+        async with transactional_session() as session:
+            example = await Example.create(
+                session=session,
+                name=data["name"],
+                description=data.get("description"),
+                price=data.get("price"),
+            )
+            return self.json_response(example.serialized, status=201)
 ```
 
+**Model** (`models/example.py`):
+
 ```python
-class User(db.BaseModel):
-    """
-    Data model for the User database table.
-    """
-    __tablename__ = 'user'
+class Example(Base):
+    __tablename__ = "example"
 
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-
-    def __init__(self, id_=None, name=None):
-        self.id = id_
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     @classmethod
-    async def get_by_id(cls, id_: int, session: Session) -> "User":
-        """
-        Get user by ID from the database
-        
-        :param id_: User ID
-        :param session: Database session object
-        :return: User instance if user exists; otherwise, None
-        """
-        # Run the SQLAlchemy session.query(Example).get() function in the background
-        return await run_async(session.query(cls).get, (id_,))
+    async def get_all(cls, session: AsyncSession) -> list["Example"]:
+        result = await session.execute(select(cls))
+        return list(result.scalars().all())
+
+    @classmethod
+    async def create(cls, session: AsyncSession, **kwargs) -> "Example":
+        example = cls(**kwargs)
+        session.add(example)
+        await session.flush()
+        return example
 ```
 
-The template comes with pre-packaged asyncio utility functions and classes to aid querying the database via SQLALchemy declarative models in the background, the above mentioned `transactional_session` context-manager, `run_async` function and `db.BaseModel` class will be generated for you as part of the cookiecutter template. 
 
-If you want to see a **working example web app** generated using this cookiecutter-template, then please head over to [/examples](https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy/tree/master/examples) directory.
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Web Framework | [Aiohttp 3.13+](https://docs.aiohttp.org/) |
+| ORM | [SQLAlchemy 2.0](https://www.sqlalchemy.org/) (native async) |
+| Database Driver | [asyncpg](https://github.com/MagicStack/asyncpg) |
+| Database | [PostgreSQL 16](https://www.postgresql.org/) |
+| Migrations | [Alembic](https://alembic.sqlalchemy.org/) |
+| Configuration | [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) |
+| Logging | [structlog](https://www.structlog.org/) |
+| Linting | [Ruff](https://docs.astral.sh/ruff/) |
+| Type Checking | [mypy](https://mypy.readthedocs.io/) |
+| Testing | [pytest](https://pytest.org/) + pytest-aiohttp |
+| Error Tracking | [Sentry](https://sentry.io/) |
+| Event Loop | [uvloop](https://github.com/MagicStack/uvloop) |
+
+
+## Requirements
+
+- Python 3.12+ (tested with 3.12 and 3.13)
+- Docker & Docker Compose (for containerized deployment)
+- PostgreSQL 14+ (or use Docker)
+
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+

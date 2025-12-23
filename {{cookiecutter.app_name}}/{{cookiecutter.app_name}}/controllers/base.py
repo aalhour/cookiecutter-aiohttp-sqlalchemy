@@ -1,8 +1,7 @@
 """
 Base Controllers module.
 """
-
-from typing import Any, List, Dict
+from typing import Any
 
 import ujson as json
 from aiohttp import web
@@ -30,8 +29,13 @@ class BaseJsonApiController:
     }
 
     @classmethod
-    def json_response(cls, body: Any=None, status: int=200, reason: str=None,
-                      headers: Dict[str, Any]=None) -> web.Response:
+    def json_response(
+        cls,
+        body: Any = None,
+        status: int = 200,
+        reason: str | None = None,
+        headers: dict[str, Any] | None = None,
+    ) -> web.Response:
         """
         Returns a complete aiohttp.web.Response with json-formatted text body that is
           utf-8 encoded with a content-type header set to "application/json".
@@ -54,8 +58,13 @@ class BaseJsonApiController:
             content_type="application/json")
 
     @classmethod
-    def write_error(cls, status: int, reason: str=None, errors: List[Dict[str, str]]=None,
-                    headers: Dict[str, Any]=None) -> web.Response:
+    def write_error(
+        cls,
+        status: int,
+        reason: str | None = None,
+        errors: list[dict[str, str]] | None = None,
+        headers: dict[str, Any] | None = None,
+    ) -> web.Response:
         """
         Sends an error response
 
@@ -73,4 +82,3 @@ class BaseJsonApiController:
             body['errors'] = errors
 
         return cls.json_response(body=body, status=status, headers=headers)
-
