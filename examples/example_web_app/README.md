@@ -7,133 +7,140 @@ An Example Web API project powered by Aiohttp and SQLAlchemy
 
   * [Synopsis](#synopsis)
   * [Dependencies](#dependencies)
-    + [Critical Backends](#critical-backends)
-    + [System Requirements](#system-requirements)
-  * [Features](#features)
   * [API](#api)
   * [How To Guides](#how-to-guides)
-    + [Setup](#setup)
-      * [Setup on Host](#setup-on-host)
-    + [Build](#build)
-      * [Build on Host](#build-on-host)
-      * [Build on Docker](#build-on-docker)
-    + [Run](#run)
-      * [Dev Server](#dev-server)
-      * [Standalone](#standalone)
-      * [Docker](#docker-container)
-    + [Test](#test)
-    + [Package](#package)
-  * [Additional Resources](#additional-resources)
+    + [Quick Start with Docker](#quick-start-with-docker)
+    + [Local Setup](#local-setup)
+    + [Development](#development)
+    + [Testing](#testing)
+    + [Packaging](#packaging)
+  * [Configuration](#configuration)
 
 
 ## Synopsis
 
-```
+```bash
+# Using Docker (recommended)
+docker compose up
+
+# Or run locally
 bin/service {start|stop|status|restart}
 ```
 
 
 ## Dependencies
 
-### Critical Backends
-
-  * _[TODO: Add services, data stores and critical backends]_
-
-### System Requirements
-
- * Please refer to the `requirements.txt` file and the `setup.py` script for a complete, up-to date, list of application requirements
- * The `requirements_dev.txt` file specified dependencies necessary for running the tests. See testing instructions below
-
-
-## Features
-
-  * _[TODO: Add list of user-facing features]_
+ * Python 3.10+
+ * PostgreSQL 14+
+ * See `requirements.txt` for Python dependencies
+ * See `requirements_dev.txt` for development/testing dependencies
 
 
 ## API
 
- * Swagger UI: [`http://0.0.0.0:9999/api/v1.0/docs`](http://0.0.0.0:9999/api/v1.0/docs)
- * OpenAPI Schema Definition: `example_web_app/docs/swagger-v1.0.yaml` 
+ * Health Check: `http://0.0.0.0:9999/api/-/health`
+ * Swagger UI: `http://0.0.0.0:9999/api/v1.0/docs`
+ * OpenAPI Schema: `example_web_app/docs/swagger-v1.0.yaml`
 
 
 ## How To Guides
 
-### Setup
+### Quick Start with Docker
 
-#### Setup on Host
+The fastest way to get started:
 
-Configure the app:
+```bash
+# Start the application with PostgreSQL
+docker compose up
 
+# Or run in detached mode
+docker compose up -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Stop everything
+docker compose down
+```
+
+The API will be available at `http://localhost:9999`.
+
+### Local Setup
+
+1. Copy the configuration file:
 ```bash
 cp config/default.conf ~/.config/example_web_app.conf
 ```
 
-Install the app:
+2. Install the application:
+```bash
+make clean install
+```
+
+3. Make sure PostgreSQL is running and update your config with database credentials.
+
+4. Start the application:
+```bash
+bin/service start
+```
+
+### Development
+
+Start the development server with hot-reload:
 
 ```bash
-$ make clean install
+make dev-server
 ```
 
-Make sure you have the database user/passwords in your `~/.pgpass` file.
+### Testing
 
-### Build
-
-#### Build on Host
+Run the test suite:
 
 ```bash
-$ make clean install
+make test
 ```
 
-#### Build on Docker
+Run with coverage:
 
 ```bash
-$ make docker-build
+make coverage
 ```
 
-### Run
+### Packaging
 
-#### Dev Server
-
-Development server is strictly for development purposes only. It comes with neat support for file-watching and automatic hot-reload.
+Build a distributable wheel:
 
 ```bash
-$ make dev-server
+make package
 ```
 
-#### Standalone
+The wheel will be created in the `dist/` directory.
 
-To run the application as a standalone service in the background (SysV style), run the following command. All logs are redirected to the `logs/example_web_app.log` file.
+
+## Configuration
+
+Configuration is managed via INI files located at `~/.config/example_web_app.conf`.
+
+For Docker deployments, you can use environment variables. Copy `env.template` to `.env` and customize:
 
 ```bash
-$ bin/service start
+cp env.template .env
+# Edit .env with your values
+docker compose up
 ```
 
-#### Docker Container
+### Configuration Options
 
-```bash
-$ make docker-run
-```
-
-The above command assumes the docker image has been built, to make sure you have built it already, please run the following command:
-
-```bash
-$ make docker-build
-```
-
-### Test
-
-```
-$ make test
-```
-
-### Package
-
-```
-$ make package
-```
-
-The result of the command is a wheel binary under the `dist/` local directory.
-
-## Additional Resources
-
-  * _[TODO: Add any relevant additional resources to the project]_
+| Section | Option | Description |
+|---------|--------|-------------|
+| `server` | `host` | Server bind address (default: 0.0.0.0) |
+| `server` | `port` | Server port (default: 9999) |
+| `db` | `host` | PostgreSQL host |
+| `db` | `port` | PostgreSQL port (default: 5432) |
+| `db` | `name` | Database name |
+| `db` | `user` | Database user |
+| `db` | `schema` | Database schema (default: public) |
+| `sentry` | `dsn` | Sentry DSN for error tracking (optional) |

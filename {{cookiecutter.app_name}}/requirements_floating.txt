@@ -11,14 +11,14 @@
 #################################################################################################
 aiohttp
 aiohttp-swagger     # swagger
-aiotask_context
-async_timeout       # aiohttp dep
+aiohappyeyeballs    # aiohttp dep
+aiosignal           # aiohttp dep
 attrs			    # aiohttp dep
-chardet			    # aiohttp dep
+frozenlist          # aiohttp dep
 multidict		    # aiohttp dep
+propcache           # aiohttp dep
 psycopg2-binary
-raven               # sentry
-raven-aiohttp       # sentry
+sentry-sdk          # error tracking (replaces raven)
 SQLAlchemy
 ujson
 uvloop

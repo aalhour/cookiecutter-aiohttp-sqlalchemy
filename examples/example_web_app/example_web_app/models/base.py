@@ -2,8 +2,6 @@
 Base Models module
 """
 
-import uuid
-
 
 __all__ = [
     "BaseModelMixin",

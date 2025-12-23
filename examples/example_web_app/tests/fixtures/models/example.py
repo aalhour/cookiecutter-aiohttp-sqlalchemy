@@ -1,6 +1,6 @@
 from uuid import uuid4
 from random import randint
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 from example_web_app.models.example import Example
@@ -14,12 +14,12 @@ class ExampleFixture:
     expected_db_data_template = {
         **user_input_template,
         "id": randint(1_000, 10_000),
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
     }
 
     @classmethod
-    async def create_mock(cls, user_input: Dict[str, Any] = None, expected_db_data: Dict[str, Any] = None) -> Example:
+    def create_mock(cls, user_input: Dict[str, Any] = None, expected_db_data: Dict[str, Any] = None) -> Example:
         """
         Creates a new mocked Example and returns it using the user's input (what the user typed in when
         creating the instance, and the expected DB data (what the database is expected to return if the
@@ -43,21 +43,21 @@ class ExampleFixture:
     class get_by_id:
         class success:
             @staticmethod
-            async def output() -> Example:
-                return await ExampleFixture.create_mock()
+            def output() -> Example:
+                return ExampleFixture.create_mock()
 
         class none:
             @staticmethod
-            async def output() -> Optional[Example]:
+            def output() -> Optional[Example]:
                 return None
 
     class get_all:
         class success:
             @staticmethod
-            async def output() -> List[Example]:
-                return [await ExampleFixture.create_mock()] * 3
+            def output() -> List[Example]:
+                return [ExampleFixture.create_mock() for _ in range(3)]
 
         class empty_list:
             @staticmethod
-            async def output() -> List[Example]:
+            def output() -> List[Example]:
                 return []

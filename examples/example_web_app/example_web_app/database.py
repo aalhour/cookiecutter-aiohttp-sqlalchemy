@@ -12,7 +12,7 @@ from typing import Callable
 from sqlalchemy import create_engine as _sa_create_engine
 from sqlalchemy.schema import MetaData
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, Session as SQLAlchemySession
 
 from example_web_app.config import db_option

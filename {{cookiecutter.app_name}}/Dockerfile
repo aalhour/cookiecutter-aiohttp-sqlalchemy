@@ -1,8 +1,45 @@
-FROM python:3.8-alpine
+# Build stage
+FROM python:3.12-slim AS builder
 
-MAINTAINER {{cookiecutter.author_email}}
+# Set build arguments
+ARG DB_HOST="{{cookiecutter.db_host}}"
+ARG DB_PORT={{cookiecutter.db_port}}
+ARG DB_USER="{{cookiecutter.db_user}}"
+ARG DB_NAME="{{cookiecutter.db_name}}"
+ARG DB_SCHEMA="{{cookiecutter.db_schema}}"
 
-# Arguments
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create and set working directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Install the application
+RUN pip install --user .
+
+
+# Production stage
+FROM python:3.12-slim AS production
+
+LABEL maintainer="{{cookiecutter.author_email}}"
+
+# Set environment variables
 ARG SERVER_HOST="{{cookiecutter.server_host}}"
 ARG SERVER_PORT={{cookiecutter.server_port}}
 ARG DB_HOST="{{cookiecutter.db_host}}"
@@ -10,49 +47,47 @@ ARG DB_PORT={{cookiecutter.db_port}}
 ARG DB_USER="{{cookiecutter.db_user}}"
 ARG DB_NAME="{{cookiecutter.db_name}}"
 ARG DB_SCHEMA="{{cookiecutter.db_schema}}"
-ARG DB_PASSWORD=password
 
-# Set the LANG ENV VAR
-ENV LANG C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LANG=C.UTF-8 \
+    PATH="/home/app/.local/bin:$PATH" \
+    SERVER_HOST=${SERVER_HOST} \
+    SERVER_PORT=${SERVER_PORT} \
+    DB_HOST=${DB_HOST} \
+    DB_PORT=${DB_PORT} \
+    DB_NAME=${DB_NAME} \
+    DB_USER=${DB_USER} \
+    DB_SCHEMA=${DB_SCHEMA}
 
-# Install system-wide dependencies
-RUN apk add --update --no-cache \
-    build-base \
-    python3-dev \
-    make \
-    postgresql-dev
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash app
 
-# Make sure pip is up-to date
-RUN pip install --upgrade pip
+# Switch to non-root user
+USER app
+WORKDIR /home/app
 
-# Copy the application code
-COPY requirements.txt /app/
-RUN pip install -r /app/requirements.txt
-COPY . /app/
+# Copy installed packages from builder
+COPY --from=builder --chown=app:app /root/.local /home/app/.local
 
-# Install the application
-WORKDIR /app/
-RUN python setup.py install
+# Copy application code
+COPY --chown=app:app . /home/app/app
 
-# Copy the config file to users home dir
-RUN mkdir -p ~/.config/
-RUN cp config/default.conf ~/.config/{{cookiecutter.app_name}}.conf
+# Setup config file
+RUN mkdir -p /home/app/.config && \
+    cp /home/app/app/config/default.conf /home/app/.config/{{cookiecutter.app_name}}.conf
 
-# Configure the postgresql secrets file
-# Format:
-#   hostname:port:database:username:password
-RUN touch ~/.pgpass
-RUN echo "$DB_HOST:$DB_PORT:$DB_NAME:$DB_USER:$DB_PASSWORD" >> ~/.pgpass
-RUN chmod 600 ~/.pgpass
+WORKDIR /home/app/app
 
-# Setup environment and run application
-ENV SERVER_HOST $SERVER_HOST
-ENV SERVER_PORT $SERVER_PORT
-ENV DB_HOST $DB_HOST
-ENV DB_PORT $DB_PORT
-ENV DB_NAME $DB_NAME
-ENV DB_USER $DB_USER
+# Expose the application port
+EXPOSE ${SERVER_PORT}
 
-EXPOSE $SERVER_PORT
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${SERVER_PORT}/api/-/health')" || exit 1
 
-ENTRYPOINT ["python", "{{cookiecutter.app_name}}/app.py"]
+# Run the application
+ENTRYPOINT ["python", "-m", "{{cookiecutter.app_name}}.app"]

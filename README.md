@@ -17,7 +17,7 @@ If you want to see a **working example web app** generated using this cookiecutt
 
  - [x] SQLALchemy Support:
    - [x] `asyncio`-compatible: use `async/await` to execute db queries
-   - [x] Request-scoped DB Sessions
+   - [x] Request-scoped DB Sessions via `contextvars`
    - [x] Executor-based queries execution
    - [x] Managed transactional support via contextmanager interface
  - [x] Swagger Support:
@@ -28,8 +28,8 @@ If you want to see a **working example web app** generated using this cookiecutt
  - [x] Development Server:
    - [x] `make dev-server` starts an Aiohttp Dev Server (file-watch enabled)
  - [x] Docker Support:
-   - [x] `Dockerfile`: configurable arguments for DB Access
-   - [x] `docker-compose.yml`: Spins up `PostgreSQL` for development
+   - [x] Multi-stage `Dockerfile` with Python 3.12
+   - [x] `docker-compose.yaml` with PostgreSQL 16 and health checks
    - [x] `make docker-build`: to build the image
    - [x] `make docker-run`: to run the image
    - [x] `make docker-build-run`: a shorthand for two of the above
@@ -37,10 +37,10 @@ If you want to see a **working example web app** generated using this cookiecutt
    - [x] `make install-dev` creates a separate virtualenv with all dev requirements
    - [x] `make pytest` runs the `tests/` package from the testing virtualenv
    - [x] `make coverage` runs test coverage analysis from the testing virtualenv
-   - [x] `make test` runs `make install-dev` and then `make pyest`
- - [ ] Configuration Management:
-   - [x] Ini-filed based configuration, see: `config/default.conf`
-   - [ ] Support configuration via `.env` file
+   - [x] `make test` runs `make install-dev` and then `make pytest`
+ - [x] Configuration Management:
+   - [x] Ini-file based configuration, see: `config/default.conf`
+   - [x] Environment variable support via `env.template`
  - [x] Management CLI:
    - [x] `make install` to create a virtualenv and install the project
    - [x] `make test` to run the tests
@@ -50,46 +50,54 @@ If you want to see a **working example web app** generated using this cookiecutt
  - [x] Python packaging:
    - [x] Auto-generated `setup.py` with project info
    - [x] `make package` builds a distributable `wheel` of the project
- - [ ] Docs:
+ - [x] Error Tracking:
+   - [x] Sentry integration via `sentry-sdk`
+ - [x] Docs:
    - [x] README.md (see: [example](examples/example_web_app/README.md))
 
 ## Requirements
 
- * Python 3.6+ (tested with Python 3.8)
- * Aiohttp
+ * Python 3.10+ (tested with Python 3.12 and 3.14)
+ * Aiohttp 3.13+
  * Aiohttp-Swagger
- * Psycopg2
- * SQLAlchemy
+ * Psycopg2-binary
+ * SQLAlchemy 1.4+
  * UVLoop
  * uJSON
+ * Sentry-SDK
 
 ## Quick Start
 
 First, grab cookiecutter if you don't have it and start the generation process:
-```
-$ pip install cookiecutter
-$ cookiecutter https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy
-```
-
-Either run everything with Docker and Docker-compose, which will also spin-up a PostgreSQL side-car instance, as follows:
-```
-$ docker-compose up
+```bash
+pip install cookiecutter
+cookiecutter https://github.com/aalhour/cookiecutter-aiohttp-sqlalchemy
 ```
 
-Or, go the manual way and install everything locally via the Makefile:
-```
-$ make install
+### Option 1: Docker (Recommended)
+
+Run everything with Docker Compose, which spins up PostgreSQL automatically:
+```bash
+cd <your-app-name>
+docker compose up
 ```
 
-Once installed manually, copy the config file template over to `~/.config/<your-app-name>.conf`. It is important that the file name matches the application name you entered in the cookiecutter generation process:
-```
-$ cp config/example.conf ~/.config/<your-app-name>.conf
+The API will be available at `http://localhost:9999` (or your configured port).
+
+### Option 2: Local Installation
+
+Install via the Makefile:
+```bash
+make install
 ```
 
-Next thing is, you need to customize your config file and enter your database details under the `[db]` section, please follow the config file:
+Copy the config file to your home directory:
+```bash
+cp config/default.conf ~/.config/<your-app-name>.conf
 ```
-$ cat ~/.config/<your-app-name>.conf
 
+Customize the config file with your database details:
+```ini
 [db]
 host = localhost
 port = 5432
@@ -98,9 +106,9 @@ schema = <schema_name>
 user = <database_user>
 ```
 
-Lastly, start the application using the Pythonic entry point:
-```
-$ venv/bin/run_<your-app-name>
+Start the application:
+```bash
+venv/bin/run_<your-app-name>
 ```
 
 ## Code Examples

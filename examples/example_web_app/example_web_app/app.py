@@ -4,21 +4,18 @@ Application Factory module.
 Provides the means to create a fully-configured web application instance.
 """
 
-import asyncio
-import uvloop
 from pathlib import Path, PurePath
 from typing import Optional
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())     # Install uvloop I/O policy before anything else!
 
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
-import aiotask_context as context
 
 from example_web_app.config import get_config, server_option
 from example_web_app.database import db
 from example_web_app.middlewares import sentry_middleware_factory, request_context_middleware
 from example_web_app.routes import setup_routes
 from example_web_app.logger import get_logger
+from example_web_app import context
 
 
 _logger = get_logger()
@@ -27,7 +24,7 @@ _logger = get_logger()
 def get_current_request() -> Optional[str]:
     """
     A helper function that returns the ID of the current application request from the
-    thread-local context.
+    context.
 
     :return: String or None.
     """
@@ -37,7 +34,8 @@ def get_current_request() -> Optional[str]:
         _logger.debug(f"Current request ID is: `{request_id}`.")
         return request_id
 
-    _logger.warn("Request ID is missing from the context!")
+    _logger.warning("Request ID is missing from the context!")
+    return None
 
 
 async def on_app_startup(app: web.Application):
@@ -100,12 +98,6 @@ def create_app() -> web.Application:
     :return: web.Application instance
     """
     ###
-    # Set the context for the I/O Loop
-    #
-    loop = asyncio.get_event_loop()
-    loop.set_task_factory(context.task_factory)
-
-    ###
     # Create an app instance and do the following:
     #   1. Initialize its config.
     #   2. Prepare its on-startup, on-cleanup and on-shutdown signals.
@@ -116,7 +108,6 @@ def create_app() -> web.Application:
             sentry_middleware_factory(),
             request_context_middleware,
         ],
-        loop=loop,
     )
     _app['config'] = get_config()
 
@@ -143,6 +134,13 @@ def run_app():
     """
     Application runner function.
     """
+    # Install uvloop for better performance (only when running the app directly)
+    try:
+        import uvloop
+        uvloop.install()
+    except ImportError:
+        pass
+
     ###
     # Create the application and read the host and port addresses
     #
@@ -171,4 +169,3 @@ def run_app():
 
 if __name__ == '__main__':
     run_app()
-

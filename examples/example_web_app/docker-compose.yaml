@@ -1,48 +1,59 @@
-version: '3'
-
 services:
-    postgres:
-        restart: always
-        image: postgres:latest
-        container_name: postgres
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_USER: admin
-            POSTGRES_DB: example_db
-            POSTGRES_INITDB_ARGS: --data-checksums --auth-local trust
-            PGDATA: /var/lib/postgresql/data/pgdata
-#        env_file: .env
-        ports:
-            - "5432:5432"
-        volumes:
-            - "docker-db-volume:/var/lib/postgresql/data"
-        networks:
-          - aiohttp
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_DB: ${DB_NAME:-example_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-example_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-    example_web_app:
-        restart: always
-        build:
-            context: .
-        ports:
-            - "9999:9999"
-#        env_file: .env
-        environment:
-            DB_HOST: postgres
-            DB_PORT: 5432
-            DB_NAME: postgres
-            DB_USER: postgres
-            DB_SCHEMA: public
-            DB_PASSWORD: password
-        depends_on:
-            - postgres
-        links:
-            - postgres
-        networks:
-            - aiohttp
+  example_web_app:
+    build:
+      context: .
+      target: production
+    container_name: example_web_app
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "9999"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-example_db}
+      DB_USER: ${DB_USER:-admin}
+      DB_SCHEMA: ${DB_SCHEMA:-public}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9999/api/-/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
-    docker-db-volume:
-        driver: local
+  postgres-data:
+    driver: local
 
 networks:
-    aiohttp:
+  app-network:
+    driver: bridge
