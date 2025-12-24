@@ -30,10 +30,12 @@ Homepage = "{{cookiecutter.project_website}}"
 
 [project.scripts]
 run_{{cookiecutter.app_name}} = "{{cookiecutter.app_name}}.app:run_app"
-init_example = "{{cookiecutter.app_name}}.init_example:init_example"
+init_db = "{{cookiecutter.app_name}}.scripts.init_db:init_db"
+
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.setuptools]
-packages = ["{{cookiecutter.app_name}}"]
 include-package-data = true
 
 [tool.setuptools.dynamic]

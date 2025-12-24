@@ -3,16 +3,27 @@ Application Factory module.
 
 Provides the means to create a fully-configured web application instance.
 """
-from pathlib import Path, PurePath
+import asyncio
+import signal
 
+import aiohttp_cors
 from aiohttp import web
-from aiohttp_swagger import setup_swagger
 
-from example_web_app import context
-from example_web_app.config import get_config, server_option
-from example_web_app.database import db
-from example_web_app.logger import get_logger
-from example_web_app.middlewares import request_context_middleware, sentry_middleware_factory
+from example_web_app.core import context
+from example_web_app.core.config import get_config, get_settings, server_option
+from example_web_app.core.database import db
+from example_web_app.core.logger import get_logger
+from example_web_app.core.redis import redis_client
+from example_web_app.middleware import (
+    metrics_middleware,
+    rate_limit_middleware,
+    request_context_middleware,
+    sentry_middleware_factory,
+    setup_metrics,
+    setup_telemetry,
+    trace_middleware,
+)
+from example_web_app.core.openapi import setup_openapi_routes
 from example_web_app.routes import setup_routes
 
 _logger = get_logger()
@@ -41,14 +52,35 @@ async def on_app_startup(app: web.Application):
 
     :param app: The application instance the signal is being executed for.
     """
-    host = app["config"].get("server", "host")
-    port = app["config"].get("server", "port")
+    settings = get_settings()
+    host = settings.server.host
+    port = settings.server.port
 
     # Starting up...
     app.logger.info(f"Starting up example_web_app on address: {host}:{port}...")
 
     # Initialize the async database
     db.initialize()
+
+    # Initialize Redis if enabled
+    if settings.redis.enabled:
+        try:
+            await redis_client.initialize()
+        except Exception as e:
+            app.logger.warning(f"Redis initialization failed: {e}")
+
+    # Initialize task pool for background jobs
+    try:
+        from example_web_app.tasks import create_task_pool
+        await create_task_pool()
+    except Exception as e:
+        app.logger.warning(f"Task pool initialization failed: {e}")
+
+    # Set up telemetry
+    setup_telemetry(app)
+
+    # Set up metrics
+    setup_metrics(app)
 
     # Started!
     app.logger.info(f"example_web_app successfully started on {host}:{port}!")
@@ -62,6 +94,9 @@ async def on_app_cleanup(app: web.Application):
     """
     # Cleaning up...
     app.logger.info("Cleaning up example_web_app's resources...")
+
+    # Clean up Redis
+    await redis_client.cleanup()
 
     # Clean up the database resources
     await db.cleanup()
@@ -79,23 +114,84 @@ async def on_app_shutdown(app: web.Application):
     app.logger.info("Shutting down example_web_app...")
 
 
+def setup_cors(app: web.Application) -> None:
+    """
+    Set up CORS for the application.
+    """
+    settings = get_settings()
+
+    if not settings.cors.enabled:
+        return
+
+    # Parse allowed origins
+    origins = settings.cors.origins.split(",") if settings.cors.origins != "*" else "*"
+
+    cors = aiohttp_cors.setup(app, defaults={
+        origin: aiohttp_cors.ResourceOptions(
+            allow_credentials=settings.cors.allow_credentials,
+            expose_headers="*",
+            allow_headers="*",
+            max_age=settings.cors.max_age,
+        )
+        for origin in (origins if isinstance(origins, list) else [origins])
+    })
+
+    # Apply CORS to all routes
+    for route in list(app.router.routes()):
+        try:
+            cors.add(route)
+        except ValueError:
+            # Route already has CORS configured
+            pass
+
+
+def build_middlewares() -> list:
+    """
+    Build the list of middlewares based on configuration.
+    """
+    settings = get_settings()
+    middlewares = []
+
+    # Sentry error tracking (always first to catch all errors)
+    middlewares.append(sentry_middleware_factory())
+
+    # Request context (request ID, logging context)
+    middlewares.append(request_context_middleware)
+
+    # Metrics collection
+    middlewares.append(metrics_middleware(
+        exclude_paths=["/metrics", "/api/-/health", "/api/-/ready", "/api/-/live"]
+    ))
+
+    # OpenTelemetry tracing
+    if settings.telemetry.enabled:
+        middlewares.append(trace_middleware())
+
+    # Rate limiting
+    if settings.rate_limit.enabled and settings.redis.enabled:
+        middlewares.append(rate_limit_middleware(
+            requests=settings.rate_limit.requests,
+            window=settings.rate_limit.window,
+            exclude_paths=["/metrics", "/api/-/health", "/api/-/ready", "/api/-/live"],
+        ))
+
+    return middlewares
+
+
 def create_app() -> web.Application:
     """
     Application factory function.
 
     1. Create a new application instance.
     2. Sets up routing for the application instance.
-    3. Sets up the Swagger plugin.
+    3. Sets up CORS, metrics, and telemetry.
     4. Returns the newly created application instance.
 
     :return: web.Application instance
     """
     _app = web.Application(
         logger=_logger,
-        middlewares=[
-            sentry_middleware_factory(),
-            request_context_middleware,
-        ],
+        middlewares=build_middlewares(),
     )
     _app['config'] = get_config()
 
@@ -106,12 +202,44 @@ def create_app() -> web.Application:
     # Setup views and routes
     setup_routes(_app)
 
-    # Setup the swagger /docs endpoint
-    this_modules_path = Path(__file__).parent.absolute()
-    api_v1_0_swagger_doc_path = str(PurePath(this_modules_path, "docs/swagger-v1.0.yaml"))
-    setup_swagger(_app, swagger_url="/api/v1.0/docs", swagger_from_file=api_v1_0_swagger_doc_path)
+    # Setup CORS
+    setup_cors(_app)
+
+    # Setup OpenAPI documentation (Swagger UI at /api/docs)
+    # Routes must be registered BEFORE this call for docs to include them
+    setup_openapi_routes(_app)
 
     return _app
+
+
+def setup_graceful_shutdown(app: web.Application, runner: web.AppRunner) -> None:
+    """
+    Set up graceful shutdown handlers for SIGTERM and SIGINT.
+    """
+    shutdown_event = asyncio.Event()
+
+    async def shutdown():
+        _logger.info("Received shutdown signal, initiating graceful shutdown...")
+
+        # Give in-flight requests time to complete
+        await asyncio.sleep(5)
+
+        # Clean up
+        await runner.cleanup()
+        shutdown_event.set()
+
+    def signal_handler(sig):
+        _logger.info(f"Received signal {sig.name}")
+        asyncio.create_task(shutdown())
+
+    loop = asyncio.get_event_loop()
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, lambda s=sig: signal_handler(s))
+        except NotImplementedError:
+            # Windows doesn't support add_signal_handler
+            pass
 
 
 def run_app():

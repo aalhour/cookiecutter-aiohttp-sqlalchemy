@@ -1,10 +1,27 @@
 """
 Base Controllers module.
 """
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 import ujson as json
 from aiohttp import web
+
+
+def _serialize_value(obj: Any) -> Any:
+    """Recursively serialize values for JSON encoding."""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, date):
+        return obj.isoformat()
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: _serialize_value(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_serialize_value(item) for item in obj]
+    return obj
 
 
 class BaseJsonApiController:
@@ -47,7 +64,9 @@ class BaseJsonApiController:
         :param dict headers: a dictionary of headers and their values.
         :return: an `aiohttp.web.Response` instance.
         """
-        json_body = json.dumps(body)
+        # Serialize any datetime/Decimal objects before JSON encoding
+        serialized_body = _serialize_value(body)
+        json_body = json.dumps(serialized_body)
 
         return web.Response(
             text=json_body,

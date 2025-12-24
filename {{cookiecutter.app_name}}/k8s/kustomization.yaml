@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for all resources
+namespace: {{cookiecutter.app_name}}
+
+# Resources to include
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  # Uncomment to include worker deployment
+  # - worker-deployment.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: {{cookiecutter.app_name}}
+  app.kubernetes.io/managed-by: kustomize
+
+# Image configuration
+images:
+  - name: {{cookiecutter.app_name}}
+    newName: {{cookiecutter.app_name}}
+    newTag: latest
+
+# ConfigMap generator (alternative to configmap.yaml)
+# configMapGenerator:
+#   - name: {{cookiecutter.app_name}}-config
+#     envs:
+#       - .env.production
+
+# Secret generator (alternative to secret.yaml)
+# secretGenerator:
+#   - name: {{cookiecutter.app_name}}-secrets
+#     envs:
+#       - .env.secrets
+

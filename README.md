@@ -15,19 +15,26 @@ Generate a production-ready async REST API in seconds with database migrations, 
 |---------|-------------|
 | **SQLAlchemy 2.0 Async** | Native async/await with `asyncpg` driver—no thread pools needed |
 | **Alembic Migrations** | Database schema management with auto-generated migrations |
+| **Pydantic Validation** | Type-safe request/response schemas with automatic validation |
 | **Pydantic Settings** | Type-safe configuration via environment variables |
+| **Redis Integration** | Caching, rate limiting, and pub/sub support |
+| **Rate Limiting** | Redis-based sliding window rate limiter |
+| **Background Tasks** | arq task queue for async job processing |
+| **WebSocket Support** | Real-time bidirectional communication |
+| **Prometheus Metrics** | `/metrics` endpoint for monitoring |
+| **OpenTelemetry Tracing** | Distributed tracing with OTLP export |
 | **Structured Logging** | JSON logs in production, colorful console in development (structlog) |
 | **Full CRUD Example** | Working Create, Read, Update, Delete API out of the box |
-| **Docker Ready** | Multi-stage Dockerfile + docker-compose with PostgreSQL |
+| **Docker Ready** | Multi-stage Dockerfile + docker-compose with PostgreSQL & Redis |
+| **Kubernetes Ready** | Full K8s manifests with HPA, PDB, Ingress, and health checks |
 | **GitHub Actions CI** | Linting, type checking, testing, and Docker builds |
 | **Pre-commit Hooks** | Ruff linting and formatting on every commit |
 | **Swagger/OpenAPI** | Auto-generated API documentation at `/api/v1.0/docs` |
 | **Sentry Integration** | Error tracking ready to configure |
 
-
 ## Examples
 
-**[View Example App →](examples/example_web_app/)**
+**[View the Example App →](examples/example_web_app/)**
 
 ## Quick Start
 
@@ -223,8 +230,13 @@ class Example(Base):
 | Database Driver | [asyncpg](https://github.com/MagicStack/asyncpg) |
 | Database | [PostgreSQL 16](https://www.postgresql.org/) |
 | Migrations | [Alembic](https://alembic.sqlalchemy.org/) |
+| Cache / Queue | [Redis](https://redis.io/) |
+| Task Queue | [arq](https://arq-docs.helpmanual.io/) |
+| Validation | [Pydantic](https://docs.pydantic.dev/) |
 | Configuration | [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) |
 | Logging | [structlog](https://www.structlog.org/) |
+| Metrics | [prometheus-client](https://prometheus.io/) |
+| Tracing | [OpenTelemetry](https://opentelemetry.io/) |
 | Linting | [Ruff](https://docs.astral.sh/ruff/) |
 | Type Checking | [mypy](https://mypy.readthedocs.io/) |
 | Testing | [pytest](https://pytest.org/) + pytest-aiohttp |

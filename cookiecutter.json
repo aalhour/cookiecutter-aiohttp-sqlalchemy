@@ -13,5 +13,5 @@
     "db_user": "admin",
     "db_name": "example_db",
     "db_schema": "public",
-    "project_short_description": "An Example Web API project powered by Aiohttp and SQLAlchemy"
+    "project_short_description": "An Example Web API project powered by aiohttp and SQLAlchemy 2.0"
 }

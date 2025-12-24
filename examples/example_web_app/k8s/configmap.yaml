@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example_web_app-config
+  namespace: example_web_app
+  labels:
+    app.kubernetes.io/name: example_web_app
+    app.kubernetes.io/component: config
+data:
+  # Server
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "9999"
+
+  # Database
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "example_db"
+  DB_USER: "admin"
+  DB_SCHEMA: "public"
+  DB_MIN_CONNECTION_POOL_SIZE: "10"
+  DB_MAX_CONNECTION_POOL_SIZE: "20"
+  DB_CONNECTION_POOL_RECYCLE_TIME: "30"
+
+  # Redis
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_ENABLED: "true"
+  REDIS_MAX_CONNECTIONS: "10"
+
+  # Rate Limiting
+  RATELIMIT_ENABLED: "true"
+  RATELIMIT_REQUESTS: "100"
+  RATELIMIT_WINDOW: "60"
+
+  # CORS
+  CORS_ENABLED: "true"
+  CORS_ORIGINS: "*"
+
+  # Logging
+  LOGGING_LEVEL: "INFO"
+
+  # Telemetry
+  OTEL_ENABLED: "false"
+  OTEL_SERVICE_NAME: "example_web_app"
+

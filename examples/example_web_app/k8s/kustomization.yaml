@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for all resources
+namespace: example_web_app
+
+# Resources to include
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  # Uncomment to include worker deployment
+  # - worker-deployment.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: example_web_app
+  app.kubernetes.io/managed-by: kustomize
+
+# Image configuration
+images:
+  - name: example_web_app
+    newName: example_web_app
+    newTag: latest
+
+# ConfigMap generator (alternative to configmap.yaml)
+# configMapGenerator:
+#   - name: example_web_app-config
+#     envs:
+#       - .env.production
+
+# Secret generator (alternative to secret.yaml)
+# secretGenerator:
+#   - name: example_web_app-secrets
+#     envs:
+#       - .env.secrets
+

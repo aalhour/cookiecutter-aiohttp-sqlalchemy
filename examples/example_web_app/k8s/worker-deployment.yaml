@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example_web_app-worker
+  namespace: example_web_app
+  labels:
+    app.kubernetes.io/name: example_web_app
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: example_web_app
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: example_web_app
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: example_web_app
+
+      containers:
+        - name: worker
+          image: example_web_app:latest
+          imagePullPolicy: Always
+
+          # Run the arq worker
+          command:
+            - arq
+            - example_web_app.tasks.worker.WorkerSettings
+
+          workingDir: /home/app/app
+
+          envFrom:
+            - configMapRef:
+                name: example_web_app-config
+            - secretRef:
+                name: example_web_app-secrets
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      terminationGracePeriodSeconds: 30
+

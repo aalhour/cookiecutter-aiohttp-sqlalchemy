@@ -1,15 +1,15 @@
 """
 Example model demonstrating SQLAlchemy 2.0 async patterns with full CRUD operations.
 """
-import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, Text, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
-from {{cookiecutter.app_name}}.database import Base
-from {{cookiecutter.app_name}}.logger import get_logger
+from {{cookiecutter.app_name}}.core.database import Base
+from {{cookiecutter.app_name}}.core.logger import get_logger
 
 __all__ = [
     "Example",
@@ -35,15 +35,15 @@ class Example(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=False),
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
-        default=datetime.datetime.utcnow
+        default=lambda: datetime.now(UTC)
     )
-    updated_at: Mapped[datetime.datetime | None] = mapped_column(
-        DateTime(timezone=False),
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
-        onupdate=datetime.datetime.utcnow
+        onupdate=lambda: datetime.now(UTC)
     )
 
     def __init__(

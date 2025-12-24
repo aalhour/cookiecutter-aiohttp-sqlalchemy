@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from {{cookiecutter.app_name}}.config import db_option
+from {{cookiecutter.app_name}}.core.config import db_option
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -48,7 +48,7 @@ def get_target_metadata():
     This enables autogenerate support.
     """
     try:
-        from {{cookiecutter.app_name}}.database import Base
+        from {{cookiecutter.app_name}}.core.database import Base
         return Base.metadata
     except Exception:
         return None

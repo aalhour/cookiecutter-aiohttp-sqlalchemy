@@ -1,0 +1,20 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{cookiecutter.app_name}}
+  namespace: {{cookiecutter.app_name}}
+  labels:
+    app.kubernetes.io/name: {{cookiecutter.app_name}}
+    app.kubernetes.io/component: api
+spec:
+  # Ensure at least 1 pod is always available during disruptions
+  minAvailable: 1
+
+  # Or use maxUnavailable instead:
+  # maxUnavailable: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{cookiecutter.app_name}}
+      app.kubernetes.io/component: api
+

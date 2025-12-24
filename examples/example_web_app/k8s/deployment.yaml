@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example_web_app
+  namespace: example_web_app
+  labels:
+    app.kubernetes.io/name: example_web_app
+    app.kubernetes.io/component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: example_web_app
+      app.kubernetes.io/component: api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: example_web_app
+        app.kubernetes.io/component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9999"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: example_web_app
+
+      # Run database migrations before starting the app
+      initContainers:
+        - name: migrate
+          image: example_web_app:latest
+          command: ["alembic", "upgrade", "head"]
+          workingDir: /home/app/app
+          envFrom:
+            - configMapRef:
+                name: example_web_app-config
+            - secretRef:
+                name: example_web_app-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+      containers:
+        - name: api
+          image: example_web_app:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 9999
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: example_web_app-config
+            - secretRef:
+                name: example_web_app-secrets
+
+          # Liveness probe - is the process alive?
+          livenessProbe:
+            httpGet:
+              path: /api/-/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Readiness probe - is the app ready to receive traffic?
+          readinessProbe:
+            httpGet:
+              path: /api/-/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Startup probe - give the app time to start
+          startupProbe:
+            httpGet:
+              path: /api/-/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Pod anti-affinity - spread across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: example_web_app
+                    app.kubernetes.io/component: api
+                topologyKey: kubernetes.io/hostname
+
+      # Graceful termination
+      terminationGracePeriodSeconds: 30
+

@@ -119,8 +119,8 @@ class TestHttpCreateUnitTestCase:
         create_example.assert_called_once()
 
     @patch('example_web_app.controllers.example_api.transactional_session')
-    async def test_returns_400_when_name_is_missing(self, session, client):
-        # Arrange
+    async def test_returns_422_when_name_is_missing(self, session, client):
+        # Arrange - Pydantic validation returns 422 for validation errors
         session_mock = mock.MagicMock(name='transactional_session_mock')
         session.return_value = TransactionalSessionFixture(target_mock=session_mock)
 
@@ -131,10 +131,11 @@ class TestHttpCreateUnitTestCase:
         # Act
         response = await client.post("/api/v1.0/examples", json=payload)
 
-        # Assert
-        assert response.status == 400
+        # Assert - Pydantic validation error returns 422
+        assert response.status == 422
         json_response = await response.json()
-        assert 'message' in json_response
+        assert 'error' in json_response
+        assert json_response['error'] == 'validation_error'
 
 
 class TestHttpUpdateUnitTestCase:

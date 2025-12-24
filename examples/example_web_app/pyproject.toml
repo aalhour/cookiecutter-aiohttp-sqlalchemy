@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "example_web_app"
 version = "1.0.0"
-description = "An Example Web API project powered by Aiohttp and SQLAlchemy"
+description = "An Example Web API project powered by aiohttp and SQLAlchemy 2.0"
 readme = "README.md"
 license = {text = "ISC"}
 authors = [
@@ -30,10 +30,12 @@ Homepage = "example.com/api/v1.0"
 
 [project.scripts]
 run_example_web_app = "example_web_app.app:run_app"
-init_example = "example_web_app.init_example:init_example"
+init_db = "example_web_app.scripts.init_db:init_db"
+
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.setuptools]
-packages = ["example_web_app"]
 include-package-data = true
 
 [tool.setuptools.dynamic]

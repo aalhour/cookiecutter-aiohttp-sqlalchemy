@@ -1,12 +1,27 @@
-aiohttp-debugtoolbar==0.6.1
-aiohttp-devtools==1.1.2
-coverage==7.8.2
-mypy==1.13.0
-pre-commit==4.0.1
-py==1.11.0
+# Development and testing dependencies
+
+# Testing
 pytest==8.4.0
 pytest-aiohttp==1.1.0
 pytest-asyncio==1.0.0
+pytest-cov==6.0.0
+coverage==7.8.2
+py==1.11.0
+
+# Development server
+aiohttp-debugtoolbar==0.6.1
+aiohttp-devtools==1.1.2
+
+# Linting and formatting
 ruff==0.8.6
+pre-commit==4.0.1
+
+# Type checking
+mypy==1.13.0
 types-PyYAML==6.0.12.20241230
 types-ujson==5.10.0.20250822
+types-redis==4.6.0.20241004
+
+# Test utilities
+factory-boy==3.3.1
+faker==33.1.0

@@ -1,0 +1,20 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: example_web_app
+  namespace: example_web_app
+  labels:
+    app.kubernetes.io/name: example_web_app
+    app.kubernetes.io/component: api
+spec:
+  # Ensure at least 1 pod is always available during disruptions
+  minAvailable: 1
+
+  # Or use maxUnavailable instead:
+  # maxUnavailable: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: example_web_app
+      app.kubernetes.io/component: api
+

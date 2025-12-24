@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{cookiecutter.app_name}}-worker
+  namespace: {{cookiecutter.app_name}}
+  labels:
+    app.kubernetes.io/name: {{cookiecutter.app_name}}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{cookiecutter.app_name}}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{cookiecutter.app_name}}
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: {{cookiecutter.app_name}}
+
+      containers:
+        - name: worker
+          image: {{cookiecutter.app_name}}:latest
+          imagePullPolicy: Always
+
+          # Run the arq worker
+          command:
+            - arq
+            - {{cookiecutter.app_name}}.tasks.worker.WorkerSettings
+
+          workingDir: /home/app/app
+
+          envFrom:
+            - configMapRef:
+                name: {{cookiecutter.app_name}}-config
+            - secretRef:
+                name: {{cookiecutter.app_name}}-secrets
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      terminationGracePeriodSeconds: 30
+

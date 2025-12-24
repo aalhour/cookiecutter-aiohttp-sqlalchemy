@@ -21,6 +21,24 @@ services:
       retries: 5
       start_period: 10s
 
+  redis:
+    image: redis:7-alpine
+    container_name: example_web_app-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    command: redis-server --appendonly yes
+
   example_web_app:
     build:
       context: .
@@ -30,16 +48,35 @@ services:
     ports:
       - "9999:9999"
     environment:
+      # Server
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "9999"
+      # Database
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_NAME: ${DB_NAME:-example_db}
       DB_USER: ${DB_USER:-admin}
       DB_SCHEMA: ${DB_SCHEMA:-public}
       DB_PASSWORD: ${DB_PASSWORD:-password}
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_ENABLED: "true"
+      # Rate Limiting
+      RATELIMIT_ENABLED: "true"
+      RATELIMIT_REQUESTS: "100"
+      RATELIMIT_WINDOW: "60"
+      # CORS
+      CORS_ENABLED: "true"
+      CORS_ORIGINS: "*"
+      # Telemetry (optional)
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_SERVICE_NAME: example_web_app
+      OTEL_OTLP_ENDPOINT: ${OTEL_OTLP_ENDPOINT:-}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - app-network
@@ -53,8 +90,40 @@ services:
       retries: 3
       start_period: 10s
 
+  # Background worker for async tasks (optional)
+  worker:
+    build:
+      context: .
+      target: production
+    container_name: example_web_app-worker
+    restart: unless-stopped
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-example_db}
+      DB_USER: ${DB_USER:-admin}
+      DB_SCHEMA: ${DB_SCHEMA:-public}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: >
+      sh -c "cd /home/app/app && arq example_web_app.tasks.worker.WorkerSettings"
+    profiles:
+      - worker  # Only start with: docker compose --profile worker up
+
 volumes:
   postgres-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:
