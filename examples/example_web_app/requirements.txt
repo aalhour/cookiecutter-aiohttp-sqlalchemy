@@ -1,5 +1,5 @@
 # Web Framework
-aiohttp==3.13.2
+aiohttp==3.13.3
 aiohttp-cors==0.7.0
 
 # Async utilities
